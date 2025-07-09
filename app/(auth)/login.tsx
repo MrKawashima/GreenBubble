@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react-native';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, CircleAlert as AlertCircle } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
