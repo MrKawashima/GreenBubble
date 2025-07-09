@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRef } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
-import { auth } from '@/config/firebase';
-import { FirebaseService } from '@/services/firebaseService';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { supabase } from '@/config/supabase';
+import { SupabaseService } from '@/services/supabaseService';
 import { User } from '@/types';
 
 interface AuthContextType {
-  firebaseUser: FirebaseUser | null;
+  session: Session | null;
   user: User | null;
   loading: boolean;
+  authLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -22,83 +23,101 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const mounted = useRef(true);
 
   useEffect(() => {
     mounted.current = true;
     
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!mounted.current) return;
-      
-      setFirebaseUser(firebaseUser);
-      
-      if (firebaseUser) {
-        try {
-          const userData = await FirebaseService.getUser(firebaseUser.uid);
-          if (mounted.current) {
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Error loading user data:', error);
-        }
-      } else {
-        if (mounted.current) {
-          setUser(null);
-        }
-      }
-      
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (mounted.current) {
-        setLoading(false);
+        setSession(session);
+        if (session?.user) {
+          loadUserData(session.user.id);
+        } else {
+          setAuthLoading(false);
+        }
       }
     });
 
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted.current) return;
+        
+        setSession(session);
+        
+        if (session?.user) {
+          await loadUserData(session.user.id);
+        } else {
+          setUser(null);
+          setAuthLoading(false);
+        }
+      }
+    );
+
     return () => {
       mounted.current = false;
-      unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const loadUserData = async (userId: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userData = await SupabaseService.getUser(userId);
+      if (mounted.current) {
+        setUser(userData);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      if (mounted.current) {
+        setAuthLoading(false);
+      }
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await SupabaseService.signIn(email, password);
     } catch (error) {
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
+    setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Create user document
-      await FirebaseService.createUser({
-        name,
-        email,
-        bubbleId: '',
-        points: 0,
-        level: 1,
-        badges: []
-      });
+      await SupabaseService.signUp(email, password, name);
     } catch (error) {
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
-      await signOut(auth);
+      await SupabaseService.signOut();
     } catch (error) {
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateUserData = async (updates: Partial<User>) => {
-    if (firebaseUser && user) {
+    if (session?.user && user) {
       try {
-        await FirebaseService.updateUser(firebaseUser.uid, updates);
+        await SupabaseService.updateUser(session.user.id, updates);
         setUser({ ...user, ...updates });
       } catch (error) {
         throw error;
@@ -107,9 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = {
-    firebaseUser,
+    session,
     user,
     loading,
+    authLoading,
     signIn,
     signUp,
     logout,

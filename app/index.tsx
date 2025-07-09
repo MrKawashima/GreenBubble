@@ -5,17 +5,17 @@ import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function IndexScreen() {
-  const { firebaseUser, loading } = useAuth();
+  const { session, authLoading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
-      if (firebaseUser) {
+    if (!authLoading) {
+      if (session) {
         router.replace('/(tabs)');
       } else {
         router.replace('/(auth)/welcome');
       }
     }
-  }, [firebaseUser, loading]);
+  }, [session, authLoading]);
 
   return (
     <LinearGradient 

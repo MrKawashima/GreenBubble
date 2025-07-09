@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Users, Plus, ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { FirebaseService } from '@/services/firebaseService';
+import { SupabaseService } from '@/services/supabaseService';
 
 export default function OnboardingScreen() {
   const [step, setStep] = useState(1);
@@ -20,22 +20,28 @@ export default function OnboardingScreen() {
       return;
     }
 
+    if (!user) {
+      Alert.alert('Error', 'User not found');
+      return;
+    }
+
     setLoading(true);
     try {
-      const bubbleId = await FirebaseService.createBubble({
+      const bubbleId = await SupabaseService.createBubble({
         name: bubbleName,
         description: `${bubbleName} - Making a green impact together`,
         isPrivate,
         inviteCode: isPrivate ? Math.random().toString(36).substring(2, 8).toUpperCase() : undefined,
-        members: [user!.id],
+        members: [user.id],
         totalPoints: 0,
         totalCO2Saved: 0,
-        createdBy: user!.id
+        createdBy: user.id
       });
 
       await updateUserData({ bubbleId });
       router.replace('/(tabs)');
     } catch (error: any) {
+      console.error('Error creating bubble:', error);
       Alert.alert('Error', 'Failed to create bubble. Please try again.');
     } finally {
       setLoading(false);
