@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Award, Leaf, TrendingUp, Users, Calendar } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { FirebaseService } from '@/services/firebaseService';
+import { SupabaseService } from '@/services/supabaseService';
 import { Bubble, ChallengeCompletion } from '@/types';
 
 interface Badge {
@@ -28,7 +28,7 @@ export default function ProgressScreen() {
     if (!user?.bubbleId) return;
 
     try {
-      const bubbleData = await FirebaseService.getBubble(user.bubbleId);
+      const bubbleData = await SupabaseService.getBubble(user.bubbleId);
       setBubble(bubbleData);
 
       // Load user's challenge completions (simplified for demo)

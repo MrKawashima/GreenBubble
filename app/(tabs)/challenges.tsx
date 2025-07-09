@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Camera, CircleCheck as CheckCircle, Upload, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
-import { FirebaseService } from '@/services/firebaseService';
+import { SupabaseService } from '@/services/supabaseService';
 import { Challenge } from '@/types';
 import { TextInput } from 'react-native';
 
@@ -22,11 +22,11 @@ export default function ChallengesScreen() {
 
   const loadChallenge = async () => {
     try {
-      const challenge = await FirebaseService.getActiveChallenge();
+      const challenge = await SupabaseService.getActiveChallenge();
       setActiveChallenge(challenge);
 
       if (challenge && user?.bubbleId) {
-        const completions = await FirebaseService.getChallengeCompletions(
+        const completions = await SupabaseService.getChallengeCompletions(
           user.bubbleId,
           challenge.id
         );
@@ -89,13 +89,13 @@ export default function ChallengesScreen() {
       let photoUrl = '';
       
       if (selectedImage) {
-        photoUrl = await FirebaseService.uploadImage(
+        photoUrl = await SupabaseService.uploadImage(
           selectedImage,
           `challenges/${user.id}/${Date.now()}.jpg`
         );
       }
 
-      await FirebaseService.completeChallenge({
+      await SupabaseService.completeChallenge({
         userId: user.id,
         challengeId: activeChallenge.id,
         bubbleId: user.bubbleId,
@@ -106,7 +106,7 @@ export default function ChallengesScreen() {
       });
 
       // Update user points
-      await FirebaseService.updateUser(user.id, {
+      await SupabaseService.updateUser(user.id, {
         points: (user.points || 0) + activeChallenge.points
       });
 

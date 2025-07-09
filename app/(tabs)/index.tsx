@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'r
 import { LinearGradient } from 'expo-linear-gradient';
 import { Users, Award, Leaf, Camera, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { FirebaseService } from '@/services/firebaseService';
+import { SupabaseService } from '@/services/supabaseService';
 import { Challenge, Bubble, ChallengeCompletion } from '@/types';
 import { router } from 'expo-router';
 
@@ -20,15 +20,15 @@ export default function HomeScreen() {
 
     try {
       const [challenge, bubbleData] = await Promise.all([
-        FirebaseService.getActiveChallenge(),
-        FirebaseService.getBubble(user.bubbleId)
+        SupabaseService.getActiveChallenge(),
+        SupabaseService.getBubble(user.bubbleId)
       ]);
 
       setActiveChallenge(challenge);
       setBubble(bubbleData);
 
       if (challenge && bubbleData) {
-        const challengeCompletions = await FirebaseService.getChallengeCompletions(
+        const challengeCompletions = await SupabaseService.getChallengeCompletions(
           bubbleData.id, 
           challenge.id
         );

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Image, Modal } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Award, Leaf, X, Calendar, MessageCircle, Camera } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { FirebaseService } from '@/services/firebaseService';
+import { SupabaseService } from '@/services/supabaseService';
 import { ChallengeCompletion, Challenge } from '@/types';
 
 interface HistoryItem extends ChallengeCompletion {
