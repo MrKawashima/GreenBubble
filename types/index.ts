@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  bubbleId: string;
+  bubbleId: string | null;
   points: number;
   level: number;
   badges: string[];
