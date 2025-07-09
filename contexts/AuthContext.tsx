@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRef } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import { FirebaseService } from '@/services/firebaseService';
@@ -24,26 +25,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    mounted.current = true;
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!mounted.current) return;
+      
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser) {
         try {
           const userData = await FirebaseService.getUser(firebaseUser.uid);
-          setUser(userData);
+          if (mounted.current) {
+            setUser(userData);
+          }
         } catch (error) {
           console.error('Error loading user data:', error);
         }
       } else {
-        setUser(null);
+        if (mounted.current) {
+          setUser(null);
+        }
       }
       
-      setLoading(false);
+      if (mounted.current) {
+        setLoading(false);
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      mounted.current = false;
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
