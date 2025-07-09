@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRef } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/config/firebase';
-import { SupabaseService } from '@/services/supabaseService';
+import { FirebaseService } from '@/services/firebaseService';
 import { User } from '@/types';
 
 interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   user: User | null;
   loading: boolean;
-  authLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authLoading, setAuthLoading] = useState(true);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -38,21 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (firebaseUser) {
         try {
-          let userData = await SupabaseService.getUser(firebaseUser.uid);
-          
-          // If user doesn't exist in Supabase, create them
-          if (!userData) {
-            userData = await SupabaseService.createUser({
-              id: firebaseUser.uid,
-              name: firebaseUser.displayName || 'User',
-              email: firebaseUser.email!,
-              bubbleId: null,
-              points: 0,
-              level: 1,
-              badges: []
-            });
-          }
-          
+          const userData = await FirebaseService.getUser(firebaseUser.uid);
           if (mounted.current) {
             setUser(userData);
           }
@@ -67,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (mounted.current) {
         setLoading(false);
-        setAuthLoading(false);
       }
     });
 
@@ -79,31 +63,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Create user document in Supabase
-      await SupabaseService.createUser({
-        id: userCredential.user.uid,
+      // Create user document
+      await FirebaseService.createUser({
         name,
         email,
-        bubbleId: null,
+        bubbleId: '',
         points: 0,
         level: 1,
         badges: []
       });
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
@@ -119,8 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserData = async (updates: Partial<User>) => {
     if (firebaseUser && user) {
       try {
-        const updatedUser = await SupabaseService.updateUser(firebaseUser.uid, updates);
-        setUser(updatedUser);
+        await FirebaseService.updateUser(firebaseUser.uid, updates);
+        setUser({ ...user, ...updates });
       } catch (error) {
         throw error;
       }
@@ -131,7 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firebaseUser,
     user,
     loading,
-    authLoading,
     signIn,
     signUp,
     logout,
