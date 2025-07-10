@@ -1,48 +1,64 @@
 import { supabase } from '@/config/supabase';
+import { Platform } from 'react-native';
 import { User, Bubble, Challenge, ChallengeCompletion, UserBubble } from '@/types';
 
 export const SupabaseService = {
   // Auth operations
   async signUp(email: string, password: string, name: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    if (data.user) {
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: data.user.id,
-          name,
-          email,
-          points: 0,
-          level: 1,
-          badges: [],
-        });
+      if (data.user) {
+        // Create user profile
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            name,
+            email,
+            points: 0,
+            level: 1,
+            badges: [],
+          });
 
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('SignUp error:', error);
+      throw error;
     }
-
-    return data;
   },
 
   async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) throw error;
-    return data;
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('SignIn error:', error);
+      throw error;
+    }
   },
 
   async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('SignOut error:', error);
+      throw error;
+    }
   },
 
   async getCurrentUser() {
@@ -52,23 +68,28 @@ export const SupabaseService = {
 
   // User operations
   async getUser(userId: string): Promise<User | null> {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
+      if (!data) return null; // No user found
+
+      return {
+        ...data,
+        activeBubbleId: data.active_bubble_id,
+        createdAt: new Date(data.created_at),
+      } as User;
+    } catch (error) {
+      console.error('GetUser error:', error);
       throw error;
     }
-
-    if (!data) return null; // No user found
-
-    return {
-      ...data,
-      activeBubbleId: data.active_bubble_id,
-      createdAt: new Date(data.created_at),
-    } as User;
   },
 
   async updateUser(userId: string, updates: Partial<User>) {
@@ -158,23 +179,29 @@ export const SupabaseService = {
   },
 
   async getUserBubbles(userId: string): Promise<UserBubble[]> {
-    const { data, error } = await supabase
-      .from('user_bubbles')
-      .select('*')
-      .eq('user_id', userId)
-      .order('joined_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('user_bubbles')
+        .select('*')
+        .eq('user_id', userId)
+        .order('joined_at', { ascending: false });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    return data.map(item => ({
-      id: item.id,
-      userId: item.user_id,
-      bubbleId: item.bubble_id,
-      joinedAt: new Date(item.joined_at),
-      role: item.role,
-      points: item.points,
-      co2Saved: item.co2_saved,
-    })) as UserBubble[];
+      return data.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        bubbleId: item.bubble_id,
+        joinedAt: new Date(item.joined_at),
+        role: item.role,
+        points: item.points,
+        co2Saved: item.co2_saved,
+      })) as UserBubble[];
+    } catch (error) {
+      console.error('GetUserBubbles error:', error);
+      // Return empty array instead of crashing
+      return [];
+    }
   },
 
   async joinBubble(bubbleId: string, userId: string) {
