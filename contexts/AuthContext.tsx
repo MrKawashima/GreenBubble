@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRef } from 'react';
+import { Platform } from 'react-native';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/config/supabase';
 import { SupabaseService } from '@/services/supabaseService';
@@ -73,6 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string) => {
     try {
+      // Add a small delay on iOS to prevent race conditions
+      if (Platform.OS === 'ios') {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
       const [userData, bubbles] = await Promise.all([
         SupabaseService.getUser(userId),
         SupabaseService.getUserBubbles(userId)
@@ -84,6 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+      // Don't crash the app on auth errors
+      if (mounted.current) {
+        setUser(null);
+        setUserBubbles([]);
+      }
     } finally {
       if (mounted.current) {
         setAuthLoading(false);
