@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Leaf, Users, Target } from 'lucide-react-native';
-import { useRouter } from 'expo-router'; // Changed `router` to `useRouter` for hooks-based routing
+import { useRouter } from 'expo-router'; // Use `useRouter` for routing
 
 export default function WelcomeScreen() {
-  const router = useRouter(); // Use `useRouter` hook for navigation
+  const router = useRouter();
 
   return (
     <LinearGradient 
@@ -13,45 +13,38 @@ export default function WelcomeScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
+        {/* Icon Section */}
         <View style={styles.iconContainer}>
           <View style={styles.bubble}>
             <Leaf color="#ffffff" size={40} />
           </View>
         </View>
         
+        {/* Title and Subtitle */}
         <Text style={styles.title}>GreenBubble</Text>
         <Text style={styles.subtitle}>
           Join your friends in weekly environmental challenges and make a positive impact together
         </Text>
         
+        {/* Feature List */}
         <View style={styles.featuresContainer}>
-          <View style={styles.feature}>
-            <Users color="#ffffff" size={24} />
-            <Text style={styles.featureText}>Create or join Bubbles</Text>
-          </View>
-          
-          <View style={styles.feature}>
-            <Target color="#ffffff" size={24} />
-            <Text style={styles.featureText}>Complete weekly challenges</Text>
-          </View>
-          
-          <View style={styles.feature}>
-            <Leaf color="#ffffff" size={24} />
-            <Text style={styles.featureText}>Track your CO2 impact</Text>
-          </View>
+          <Feature icon={<Users color="#ffffff" size={24} />} text="Create or join Bubbles" />
+          <Feature icon={<Target color="#ffffff" size={24} />} text="Complete weekly challenges" />
+          <Feature icon={<Leaf color="#ffffff" size={24} />} text="Track your CO2 impact" />
         </View>
         
+        {/* Buttons */}
         <View style={styles.buttonContainer}>
           <Pressable 
             style={styles.primaryButton}
-            onPress={() => router.push('/(auth)/signup')} // Navigation action fixed
+            onPress={() => router.push('/(auth)/signup')}
           >
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </Pressable>
           
           <Pressable 
             style={styles.secondaryButton}
-            onPress={() => router.push('/(auth)/login')} // Navigation action fixed
+            onPress={() => router.push('/(auth)/login')}
           >
             <Text style={styles.secondaryButtonText}>I already have an account</Text>
           </Pressable>
@@ -60,6 +53,14 @@ export default function WelcomeScreen() {
     </LinearGradient>
   );
 }
+
+// A reusable Feature component to avoid redundancy
+const Feature = ({ icon, text }) => (
+  <View style={styles.feature}>
+    {icon}
+    <Text style={styles.featureText}>{text}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -84,14 +85,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontFamily: 'Poppins-Bold', // Make sure this font is loaded
+    fontFamily: 'Poppins-Bold', // Ensure the font is loaded
     color: '#ffffff',
     textAlign: 'center',
     marginBottom: 16,
   },
   subtitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Regular', // Make sure this font is loaded
+    fontFamily: 'Inter-Regular', // Ensure the font is loaded
     color: '#ffffff',
     textAlign: 'center',
     lineHeight: 24,
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular', // Make sure this font is loaded
+    fontFamily: 'Inter-Regular', // Ensure the font is loaded
     color: '#ffffff',
     marginLeft: 16,
   },
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold', // Make sure this font is loaded
+    fontFamily: 'Inter-SemiBold', // Ensure the font is loaded
     color: '#047857',
   },
   secondaryButton: {
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular', // Make sure this font is loaded
+    fontFamily: 'Inter-Regular', // Ensure the font is loaded
     color: '#ffffff',
   },
 });
