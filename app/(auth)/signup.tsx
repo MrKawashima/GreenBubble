@@ -277,6 +277,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
     textAlign: 'center',
+    marginRight: 4,
   },
   linkText: {
     color: '#10B981',
