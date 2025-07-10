@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Users, Plus, ArrowRight, Hash } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
@@ -96,7 +96,7 @@ export default function OnboardingScreen() {
         <View style={styles.content}>
           <View style={styles.iconContainer}>
             <View style={styles.bubble}>
-              <Users color="#ffffff" size={40} />
+              <Ionicons name="people" color="#ffffff" size={40} />
             </View>
           </View>
           
@@ -107,12 +107,12 @@ export default function OnboardingScreen() {
           
           <View style={styles.buttonContainer}>
             <Pressable style={styles.primaryButton} onPress={() => setStep(2)}>
-              <Plus color="#047857" size={24} />
+              <Ionicons name="add" color="#047857" size={24} />
               <Text style={styles.primaryButtonText}>Create a New Bubble</Text>
             </Pressable>
             
             <Pressable style={styles.secondaryButton} onPress={() => setStep(3)}>
-              <Hash color="#ffffff" size={24} />
+              <Ionicons name="key" color="#ffffff" size={24} />
               <Text style={styles.secondaryButtonText}>Join with Invite Code</Text>
             </Pressable>
           </View>
@@ -154,7 +154,7 @@ export default function OnboardingScreen() {
               <Text style={styles.createButtonText}>
                 {loading ? 'Creating...' : 'Create Bubble'}
               </Text>
-              <ArrowRight color="#ffffff" size={20} />
+              <Ionicons name="arrow-forward" color="#ffffff" size={20} />
             </Pressable>
           </View>
         </View>
@@ -196,7 +196,7 @@ export default function OnboardingScreen() {
             <Text style={styles.createButtonText}>
               {loading ? 'Joining...' : 'Join Bubble'}
             </Text>
-            <ArrowRight color="#ffffff" size={20} />
+            <Ionicons name="arrow-forward" color="#ffffff" size={20} />
           </Pressable>
         </View>
       </View>

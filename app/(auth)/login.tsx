@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -63,7 +63,7 @@ export default function LoginScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft color="#ffffff" size={24} />
+          <Ionicons name="arrow-back" color="#ffffff" size={24} />
         </Pressable>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to continue your green journey</Text>
@@ -79,7 +79,7 @@ export default function LoginScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Email</Text>
           <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-            <Mail color={errors.email ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons name="mail" color={errors.email ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
@@ -100,7 +100,7 @@ export default function LoginScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Password</Text>
           <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-            <Lock color={errors.password ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons name="lock-closed" color={errors.password ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
@@ -118,9 +118,9 @@ export default function LoginScreen() {
               onPress={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <EyeOff color="#6B7280" size={20} />
+                <Ionicons name="eye-off" color="#6B7280" size={20} />
               ) : (
-                <Eye color="#6B7280" size={20} />
+                <Ionicons name="eye" color="#6B7280" size={20} />
               )}
             </Pressable>
           </View>

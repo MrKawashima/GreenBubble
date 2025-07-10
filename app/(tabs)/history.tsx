@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clock, Award, Leaf, X, Calendar, MessageCircle, Camera, ChevronDown, Users, Filter } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
 import { ChallengeCompletion, Challenge, Bubble } from '@/types';
@@ -178,7 +178,7 @@ export default function HistoryScreen() {
         </LinearGradient>
         
         <View style={styles.emptyContainer}>
-          <Clock color="#6B7280" size={64} />
+          <Ionicons name="time" color="#6B7280" size={64} />
           <Text style={styles.emptyTitle}>No History Yet</Text>
           <Text style={styles.emptyText}>
             Complete your first challenge to start building your environmental impact history!
@@ -207,10 +207,10 @@ export default function HistoryScreen() {
             onPress={() => setShowBubbleFilter(true)}
           >
             <View style={styles.filterInfo}>
-              <Filter color="#ffffff" size={16} />
+              <Ionicons name="filter" color="#ffffff" size={16} />
               <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
             </View>
-            <ChevronDown color="#ffffff" size={16} />
+            <Ionicons name="chevron-down" color="#ffffff" size={16} />
           </Pressable>
         )}
         
@@ -245,15 +245,15 @@ export default function HistoryScreen() {
                 <View style={styles.cardInfo}>
                   <Text style={styles.challengeTitle}>{item.challengeTitle}</Text>
                   <View style={styles.dateRow}>
-                    <Calendar color="#6B7280" size={14} />
+                    <Ionicons name="calendar" color="#6B7280" size={14} />
                     <Text style={styles.dateText}>{formatDate(item.completedAt)}</Text>
                   </View>
                   {userBubbles.length > 1 && (
                     <View style={styles.bubbleRow}>
-                      <Users color="#6B7280" size={14} />
+                      <Ionicons name="people" color="#6B7280" size={14} />
                       <Text style={styles.bubbleText}>{item.bubbleName}</Text>
                     </View>
-                  )}
+                  <Ionicons name="camera" color="#ffffff" size={20} />
                 </View>
               </View>
               
@@ -264,16 +264,16 @@ export default function HistoryScreen() {
 
             <View style={styles.cardStats}>
               <View style={styles.statBadge}>
-                <Award color="#F59E0B" size={16} />
+                <Ionicons name="trophy" color="#F59E0B" size={16} />
                 <Text style={styles.statBadgeText}>+{item.points} pts</Text>
               </View>
               <View style={styles.statBadge}>
-                <Leaf color="#10B981" size={16} />
+                <Ionicons name="leaf" color="#10B981" size={16} />
                 <Text style={styles.statBadgeText}>{item.co2Saved}kg CO₂</Text>
               </View>
               {item.comment && (
                 <View style={styles.statBadge}>
-                  <MessageCircle color="#6B7280" size={16} />
+                  <Ionicons name="chatbubble" color="#6B7280" size={16} />
                   <Text style={styles.statBadgeText}>Comment</Text>
                 </View>
               )}
@@ -301,7 +301,7 @@ export default function HistoryScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubbleFilter(false)}
             >
-              <X color="#6B7280" size={24} />
+              <Ionicons name="close" color="#6B7280" size={24} />
             </Pressable>
           </View>
 
@@ -318,7 +318,7 @@ export default function HistoryScreen() {
             >
               <Text style={styles.filterOptionText}>All Bubbles</Text>
               {!selectedBubbleFilter && (
-                <CheckCircle color="#10B981" size={20} />
+                <Ionicons name="checkmark-circle" color="#10B981" size={20} />
               )}
             </Pressable>
 
@@ -336,14 +336,14 @@ export default function HistoryScreen() {
               >
                 <View style={styles.filterOptionContent}>
                   <View style={styles.filterOptionIcon}>
-                    <Users color="#10B981" size={20} />
+                    <Ionicons name="people" color="#10B981" size={20} />
                   </View>
                   <Text style={styles.filterOptionText}>
                     Bubble {userBubble.bubbleId.slice(0, 8)}
                   </Text>
                 </View>
                 {selectedBubbleFilter === userBubble.bubbleId && (
-                  <CheckCircle color="#10B981" size={20} />
+                  <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 )}
               </Pressable>
             ))}
@@ -400,14 +400,14 @@ export default function HistoryScreen() {
                 <View style={styles.impactStats}>
                   <View style={styles.impactItem}>
                     <View style={styles.impactIcon}>
-                      <Award color="#F59E0B" size={24} />
+                      <Ionicons name="trophy" color="#F59E0B" size={24} />
                     </View>
                     <Text style={styles.impactNumber}>+{selectedItem.points}</Text>
                     <Text style={styles.impactLabel}>Points Earned</Text>
                   </View>
                   <View style={styles.impactItem}>
                     <View style={styles.impactIcon}>
-                      <Leaf color="#10B981" size={24} />
+                      <Ionicons name="leaf" color="#10B981" size={24} />
                     </View>
                     <Text style={styles.impactNumber}>{selectedItem.co2Saved}kg</Text>
                     <Text style={styles.impactLabel}>CO₂ Saved</Text>

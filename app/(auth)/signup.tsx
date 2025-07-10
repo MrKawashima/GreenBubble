@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -128,7 +128,7 @@ export default function SignupScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft color="#ffffff" size={24} />
+          <Ionicons name="arrow-back" color="#ffffff" size={24} />
         </Pressable>
         <Text style={styles.title}>Join GreenBubble</Text>
         <Text style={styles.subtitle}>Create your account and start making an impact</Text>
@@ -148,7 +148,7 @@ export default function SignupScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Full Name</Text>
           <View style={[styles.inputContainer, errors.name && styles.inputError]}>
-            <User color={errors.name ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons name="person" color={errors.name ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Enter your full name"
@@ -164,7 +164,7 @@ export default function SignupScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Email</Text>
           <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-            <Mail color={errors.email ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons name="mail" color={errors.email ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
@@ -182,7 +182,7 @@ export default function SignupScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Password</Text>
           <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-            <Lock color={errors.password ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons name="lock-closed" color={errors.password ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Create a password"
@@ -197,9 +197,9 @@ export default function SignupScreen() {
               onPress={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <EyeOff color="#6B7280" size={20} />
+                <Ionicons name="eye-off" color="#6B7280" size={20} />
               ) : (
-                <Eye color="#6B7280" size={20} />
+                <Ionicons name="eye" color="#6B7280" size={20} />
               )}
             </Pressable>
           </View>
@@ -229,7 +229,7 @@ export default function SignupScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Confirm Password</Text>
           <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
-            <Lock color={errors.confirmPassword ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons name="lock-closed" color={errors.confirmPassword ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Confirm your password"
@@ -244,15 +244,15 @@ export default function SignupScreen() {
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? (
-                <EyeOff color="#6B7280" size={20} />
+                <Ionicons name="eye-off" color="#6B7280" size={20} />
               ) : (
-                <Eye color="#6B7280" size={20} />
+                <Ionicons name="eye" color="#6B7280" size={20} />
               )}
             </Pressable>
           </View>
           {formData.confirmPassword && formData.password === formData.confirmPassword && (
             <View style={styles.matchIndicator}>
-              <CheckCircle color="#10B981" size={16} />
+              <Ionicons name="checkmark-circle" color="#10B981" size={16} />
               <Text style={styles.matchText}>Passwords match</Text>
             </View>
           )}

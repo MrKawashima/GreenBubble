@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Image, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Camera, CircleCheck as CheckCircle, Upload, X, ChevronDown, Users } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
@@ -146,7 +146,7 @@ export default function ChallengesScreen() {
         </LinearGradient>
         
         <View style={styles.emptyContainer}>
-          <CheckCircle color="#6B7280" size={64} />
+          <Ionicons name="checkmark-circle" color="#6B7280" size={64} />
           <Text style={styles.emptyTitle}>No Active Bubble</Text>
           <Text style={styles.emptyText}>
             Join a bubble to participate in environmental challenges!
@@ -172,18 +172,18 @@ export default function ChallengesScreen() {
               onPress={() => setShowBubbleSelector(true)}
             >
               <View style={styles.bubbleInfo}>
-                <Users color="#ffffff" size={16} />
+                <Ionicons name="people" color="#ffffff" size={16} />
                 <Text style={styles.bubbleName}>
                   {activeBubble?.name || 'Select Bubble'}
                 </Text>
               </View>
-              <ChevronDown color="#ffffff" size={16} />
+              <Ionicons name="chevron-down" color="#ffffff" size={16} />
             </Pressable>
           )}
         </LinearGradient>
         
         <View style={styles.emptyContainer}>
-          <CheckCircle color="#6B7280" size={64} />
+          <Ionicons name="checkmark-circle" color="#6B7280" size={64} />
           <Text style={styles.emptyTitle}>No Active Challenge</Text>
           <Text style={styles.emptyText}>
             Check back soon for this week's environmental challenge!
@@ -208,12 +208,12 @@ export default function ChallengesScreen() {
             onPress={() => setShowBubbleSelector(true)}
           >
             <View style={styles.bubbleInfo}>
-              <Users color="#ffffff" size={16} />
+              <Ionicons name="people" color="#ffffff" size={16} />
               <Text style={styles.bubbleName}>
                 {activeBubble?.name || 'Select Bubble'}
               </Text>
             </View>
-            <ChevronDown color="#ffffff" size={16} />
+            <Ionicons name="chevron-down" color="#ffffff" size={16} />
           </Pressable>
         )}
       </LinearGradient>
@@ -240,7 +240,7 @@ export default function ChallengesScreen() {
 
         {userCompleted ? (
           <View style={styles.completedCard}>
-            <CheckCircle color="#10B981" size={48} />
+            <Ionicons name="checkmark-circle" color="#10B981" size={48} />
             <Text style={styles.completedTitle}>Challenge Completed!</Text>
             <Text style={styles.completedText}>
               Great job! You've earned {activeChallenge.points} points and helped save the environment.
@@ -257,7 +257,7 @@ export default function ChallengesScreen() {
                   style={styles.removeImageButton}
                   onPress={() => setSelectedImage(null)}
                 >
-                  <X color="#ffffff" size={20} />
+                  <Ionicons name="close" color="#ffffff" size={20} />
                 </Pressable>
               </View>
             ) : (
@@ -265,12 +265,12 @@ export default function ChallengesScreen() {
                 <Text style={styles.photoTitle}>Add a Photo (Optional)</Text>
                 <View style={styles.photoButtons}>
                   <Pressable style={styles.photoButton} onPress={takePhoto}>
-                    <Camera color="#10B981" size={24} />
+                    <Ionicons name="camera" color="#10B981" size={24} />
                     <Text style={styles.photoButtonText}>Take Photo</Text>
                   </Pressable>
                   
                   <Pressable style={styles.photoButton} onPress={pickImage}>
-                    <Upload color="#10B981" size={24} />
+                    <Ionicons name="cloud-upload" color="#10B981" size={24} />
                     <Text style={styles.photoButtonText}>Upload</Text>
                   </Pressable>
                 </View>
@@ -296,7 +296,7 @@ export default function ChallengesScreen() {
               onPress={handleCompleteChallenge}
               disabled={loading}
             >
-              <CheckCircle color="#ffffff" size={20} />
+              <Ionicons name="checkmark-circle" color="#ffffff" size={20} />
               <Text style={styles.submitButtonText}>
                 {loading ? 'Submitting...' : 'Complete Challenge'}
               </Text>
@@ -331,7 +331,7 @@ export default function ChallengesScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubbleSelector(false)}
             >
-              <X color="#6B7280" size={24} />
+              <Ionicons name="close" color="#6B7280" size={24} />
             </Pressable>
           </View>
 
@@ -347,7 +347,7 @@ export default function ChallengesScreen() {
               >
                 <View style={styles.bubbleOptionContent}>
                   <View style={styles.bubbleOptionIcon}>
-                    <Users color="#10B981" size={24} />
+                    <Ionicons name="people" color="#10B981" size={24} />
                   </View>
                   <View style={styles.bubbleOptionInfo}>
                     <Text style={styles.bubbleOptionName}>Loading...</Text>
@@ -357,7 +357,7 @@ export default function ChallengesScreen() {
                   </View>
                 </View>
                 {user?.activeBubbleId === userBubble.bubbleId && (
-                  <CheckCircle color="#10B981" size={20} />
+                  <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 )}
               </Pressable>
             ))}

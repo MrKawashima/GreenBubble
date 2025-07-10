@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Leaf, Users, Target } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function WelcomeScreen() {
@@ -12,7 +12,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <View style={styles.bubble}>
-            <Leaf color="#ffffff" size={40} />
+            <Ionicons name="leaf" color="#ffffff" size={40} />
           </View>
         </View>
         <Text style={styles.title}>GreenBubble</Text>
@@ -21,15 +21,15 @@ export default function WelcomeScreen() {
         </Text>
         <View style={styles.featuresContainer}>
           <View style={styles.feature}>
-            <Users color="#ffffff" size={24} />
+            <Ionicons name="people" color="#ffffff" size={24} />
             <Text style={styles.featureText}>Create or join Bubbles</Text>
           </View>
           <View style={styles.feature}>
-            <Target color="#ffffff" size={24} />
+            <Ionicons name="target" color="#ffffff" size={24} />
             <Text style={styles.featureText}>Complete weekly challenges</Text>
           </View>
           <View style={styles.feature}>
-            <Leaf color="#ffffff" size={24} />
+            <Ionicons name="leaf" color="#ffffff" size={24} />
             <Text style={styles.featureText}>Track your CO2 impact</Text>
           </View>
         </View>
