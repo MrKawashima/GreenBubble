@@ -11,7 +11,7 @@ export default function OnboardingScreen() {
   const [bubbleName, setBubbleName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, updateUserData, refreshUserBubbles } = useAuth();
+  const { user, updateUserData, refreshUserBubbles, switchActiveBubble } = useAuth();
 
   const generateInviteCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
