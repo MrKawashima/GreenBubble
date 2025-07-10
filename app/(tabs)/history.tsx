@@ -316,7 +316,9 @@ export default function HistoryScreen() {
                 setShowBubbleFilter(false);
               }}
             >
-              <Text style={styles.filterOptionText}>All Bubbles</Text>
+              <View style={styles.filterOptionContent}>
+                <Text style={styles.filterOptionText}>All Bubbles</Text>
+              </View>
               {!selectedBubbleFilter && (
                 <Ionicons name="checkmark-circle" color="#10B981" size={20} />
               )}
