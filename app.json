@@ -9,7 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "GreenBubble needs access to your camera to take photos of completed environmental challenges and share your progress with your bubble members.",
+        "NSPhotoLibraryUsageDescription": "GreenBubble needs access to your photo library to select and upload photos of completed environmental challenges.",
+        "NSPhotoLibraryAddUsageDescription": "GreenBubble needs permission to save photos of your completed environmental challenges to your photo library.",
+        "NSMicrophoneUsageDescription": "GreenBubble may need access to your microphone when recording videos of environmental challenges."
+      }
     },
     "web": {
       "bundler": "metro",
