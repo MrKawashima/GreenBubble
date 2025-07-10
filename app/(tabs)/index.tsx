@@ -52,12 +52,7 @@ export default function HomeScreen() {
   };
 
   const handleCompleteChallenge = () => {
-    if (activeChallenge) {
-      router.push({
-        pathname: '/(tabs)/challenges',
-        params: { challengeId: activeChallenge.id }
-      });
-    }
+    router.push('/(tabs)/challenges');
   };
 
   const handleSwitchBubble = async (bubbleId: string) => {
