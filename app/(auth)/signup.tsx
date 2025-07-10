@@ -78,7 +78,7 @@ export default function SignupScreen() {
         errorMessage = 'Please enter a valid email address';
       }
       
-      console.error('Signup error:', errorMessage);
+      console.warn('Signup attempt failed:', errorMessage);
       setErrors({ general: errorMessage });
     }
   };
