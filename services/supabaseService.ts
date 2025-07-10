@@ -122,6 +122,73 @@ export const SupabaseService = {
     if (error) throw error;
   },
 
+  async updateBubble(bubbleId: string, updates: { name?: string; description?: string }) {
+    const { error } = await supabase
+      .from('bubbles')
+      .update({
+        name: updates.name,
+        description: updates.description,
+      })
+      .eq('id', bubbleId);
+
+    if (error) throw error;
+  },
+
+  async deleteBubble(bubbleId: string) {
+    // First check if user has permission (is creator)
+    const { data: bubble, error: fetchError } = await supabase
+      .from('bubbles')
+      .select('created_by')
+      .eq('id', bubbleId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentUser = await this.getCurrentUser();
+    if (!currentUser || bubble.created_by !== currentUser.id) {
+      throw new Error('You do not have permission to delete this bubble');
+    }
+
+    // Delete the bubble (cascade will handle related records)
+    const { error } = await supabase
+      .from('bubbles')
+      .delete()
+      .eq('id', bubbleId);
+
+    if (error) throw error;
+  },
+
+  async getBubbleMembers(bubbleId: string): Promise<User[]> {
+    const { data, error } = await supabase
+      .from('user_bubbles')
+      .select(`
+        users (
+          id,
+          name,
+          email,
+          points,
+          level,
+          badges,
+          avatar,
+          created_at
+        )
+      `)
+      .eq('bubble_id', bubbleId);
+
+    if (error) throw error;
+
+    return data.map(item => ({
+      id: item.users.id,
+      name: item.users.name,
+      email: item.users.email,
+      points: item.users.points,
+      level: item.users.level,
+      badges: item.users.badges,
+      avatar: item.users.avatar,
+      createdAt: new Date(item.users.created_at),
+    })) as User[];
+  },
+
   // Bubble operations
   async createBubble(bubbleData: Omit<Bubble, 'id' | 'createdAt'>) {
     const { data, error } = await supabase

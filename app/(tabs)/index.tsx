@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
-import { Challenge, Bubble, ChallengeCompletion } from '@/types';
+import { Challenge, Bubble, ChallengeCompletion, User } from '@/types';
 import { router } from 'expo-router';
 
 export default function HomeScreen() {
@@ -15,6 +15,13 @@ export default function HomeScreen() {
   const [userCompleted, setUserCompleted] = useState(false);
   const [showBubbleSelector, setShowBubbleSelector] = useState(false);
   const [bubbleNames, setBubbleNames] = useState<Record<string, string>>({});
+  const [showBubbleSettings, setShowBubbleSettings] = useState(false);
+  const [selectedBubbleForSettings, setSelectedBubbleForSettings] = useState<string | null>(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [newBubbleName, setNewBubbleName] = useState('');
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [bubbleMembers, setBubbleMembers] = useState<User[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   const { user, userBubbles, switchActiveBubble, refreshUserBubbles } = useAuth();
 
   const loadData = async () => {
@@ -88,6 +95,142 @@ export default function HomeScreen() {
   const handleJoinNewBubble = () => {
     setShowBubbleSelector(false);
     router.push('/(auth)/onboarding');
+  };
+
+  const handleBubbleSettings = (bubbleId: string) => {
+    setSelectedBubbleForSettings(bubbleId);
+    setShowBubbleSelector(false);
+    setShowBubbleSettings(true);
+  };
+
+  const handleRenameBubble = async () => {
+    if (!selectedBubbleForSettings || !newBubbleName.trim()) {
+      Alert.alert('Error', 'Please enter a valid bubble name');
+      return;
+    }
+
+    try {
+      await SupabaseService.updateBubble(selectedBubbleForSettings, {
+        name: newBubbleName.trim()
+      });
+      
+      // Update local bubble names
+      setBubbleNames(prev => ({
+        ...prev,
+        [selectedBubbleForSettings]: newBubbleName.trim()
+      }));
+      
+      // Refresh data if this is the active bubble
+      if (user?.activeBubbleId === selectedBubbleForSettings) {
+        await loadData();
+      }
+      
+      setShowRenameModal(false);
+      setShowBubbleSettings(false);
+      setNewBubbleName('');
+      Alert.alert('Success', 'Bubble renamed successfully!');
+    } catch (error) {
+      console.error('Error renaming bubble:', error);
+      Alert.alert('Error', 'Failed to rename bubble. You might not have permission.');
+    }
+  };
+
+  const handleDeleteBubble = () => {
+    if (!selectedBubbleForSettings) return;
+
+    const bubbleName = bubbleNames[selectedBubbleForSettings] || 'this bubble';
+    
+    Alert.alert(
+      'Delete Bubble',
+      `Are you sure you want to delete "${bubbleName}"? This action cannot be undone and will remove all data associated with this bubble.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await SupabaseService.deleteBubble(selectedBubbleForSettings);
+              await refreshUserBubbles();
+              
+              // If this was the active bubble, switch to another one
+              if (user?.activeBubbleId === selectedBubbleForSettings) {
+                const remainingBubbles = userBubbles.filter(ub => ub.bubbleId !== selectedBubbleForSettings);
+                if (remainingBubbles.length > 0) {
+                  await switchActiveBubble(remainingBubbles[0].bubbleId);
+                } else {
+                  // No bubbles left, redirect to onboarding
+                  router.push('/(auth)/onboarding');
+                }
+              }
+              
+              setShowBubbleSettings(false);
+              Alert.alert('Success', 'Bubble deleted successfully');
+            } catch (error) {
+              console.error('Error deleting bubble:', error);
+              Alert.alert('Error', 'Failed to delete bubble. You might not have permission.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleViewMembers = async () => {
+    if (!selectedBubbleForSettings) return;
+
+    setLoadingMembers(true);
+    try {
+      const members = await SupabaseService.getBubbleMembers(selectedBubbleForSettings);
+      setBubbleMembers(members);
+      setShowMembersModal(true);
+    } catch (error) {
+      console.error('Error loading members:', error);
+      Alert.alert('Error', 'Failed to load bubble members');
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const handleLeaveBubble = () => {
+    if (!selectedBubbleForSettings) return;
+
+    const bubbleName = bubbleNames[selectedBubbleForSettings] || 'this bubble';
+    
+    Alert.alert(
+      'Leave Bubble',
+      `Are you sure you want to leave "${bubbleName}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await SupabaseService.leaveBubble(selectedBubbleForSettings, user!.id);
+              await refreshUserBubbles();
+              
+              // If this was the active bubble, switch to another one
+              if (user?.activeBubbleId === selectedBubbleForSettings) {
+                const remainingBubbles = userBubbles.filter(ub => ub.bubbleId !== selectedBubbleForSettings);
+                if (remainingBubbles.length > 0) {
+                  await switchActiveBubble(remainingBubbles[0].bubbleId);
+                } else {
+                  // No bubbles left, redirect to onboarding
+                  router.push('/(auth)/onboarding');
+                }
+              }
+              
+              setShowBubbleSettings(false);
+              Alert.alert('Success', 'Left bubble successfully');
+            } catch (error) {
+              console.error('Error leaving bubble:', error);
+              Alert.alert('Error', 'Failed to leave bubble');
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (userBubbles.length === 0) {
@@ -287,6 +430,12 @@ export default function HomeScreen() {
                 {user?.activeBubbleId === userBubble.bubbleId && (
                   <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 )}
+                <Pressable
+                  style={styles.settingsButton}
+                  onPress={() => handleBubbleSettings(userBubble.bubbleId)}
+                >
+                  <Ionicons name="settings" color="#6B7280" size={16} />
+                </Pressable>
               </Pressable>
             ))}
 
@@ -294,6 +443,201 @@ export default function HomeScreen() {
               <Ionicons name="add" color="#10B981" size={24} />
               <Text style={styles.joinNewBubbleText}>Join Another Bubble</Text>
             </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Bubble Settings Modal */}
+      <Modal
+        visible={showBubbleSettings}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              {selectedBubbleForSettings ? bubbleNames[selectedBubbleForSettings] || 'Bubble Settings' : 'Bubble Settings'}
+            </Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowBubbleSettings(false)}
+            >
+              <Ionicons name="close" color="#6B7280" size={20} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {/* Rename Bubble */}
+            <Pressable
+              style={styles.settingsOption}
+              onPress={() => {
+                setNewBubbleName(selectedBubbleForSettings ? bubbleNames[selectedBubbleForSettings] || '' : '');
+                setShowRenameModal(true);
+              }}
+            >
+              <View style={styles.settingsOptionIcon}>
+                <Ionicons name="create" color="#3B82F6" size={20} />
+              </View>
+              <View style={styles.settingsOptionContent}>
+                <Text style={styles.settingsOptionTitle}>Rename Bubble</Text>
+                <Text style={styles.settingsOptionSubtitle}>Change the bubble name</Text>
+              </View>
+              <Ionicons name="chevron-forward" color="#6B7280" size={16} />
+            </Pressable>
+
+            {/* View Members */}
+            <Pressable
+              style={styles.settingsOption}
+              onPress={handleViewMembers}
+              disabled={loadingMembers}
+            >
+              <View style={styles.settingsOptionIcon}>
+                <Ionicons name="people" color="#10B981" size={20} />
+              </View>
+              <View style={styles.settingsOptionContent}>
+                <Text style={styles.settingsOptionTitle}>View Members</Text>
+                <Text style={styles.settingsOptionSubtitle}>See who's in this bubble</Text>
+              </View>
+              {loadingMembers ? (
+                <Text style={styles.loadingText}>Loading...</Text>
+              ) : (
+                <Ionicons name="chevron-forward" color="#6B7280" size={16} />
+              )}
+            </Pressable>
+
+            {/* Invite Code */}
+            <Pressable
+              style={styles.settingsOption}
+              onPress={() => {
+                const bubble = userBubbles.find(ub => ub.bubbleId === selectedBubbleForSettings);
+                if (bubble) {
+                  // We'll need to get the invite code from the bubble data
+                  Alert.alert('Invite Code', 'Feature coming soon - you\'ll be able to view and share the invite code here');
+                }
+              }}
+            >
+              <View style={styles.settingsOptionIcon}>
+                <Ionicons name="key" color="#F59E0B" size={20} />
+              </View>
+              <View style={styles.settingsOptionContent}>
+                <Text style={styles.settingsOptionTitle}>Invite Code</Text>
+                <Text style={styles.settingsOptionSubtitle}>Share with friends</Text>
+              </View>
+              <Ionicons name="chevron-forward" color="#6B7280" size={16} />
+            </Pressable>
+
+            {/* Danger Zone */}
+            <View style={styles.dangerZone}>
+              <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+              
+              <Pressable
+                style={styles.dangerOption}
+                onPress={handleLeaveBubble}
+              >
+                <View style={[styles.settingsOptionIcon, styles.dangerIcon]}>
+                  <Ionicons name="exit" color="#EF4444" size={20} />
+                </View>
+                <View style={styles.settingsOptionContent}>
+                  <Text style={[styles.settingsOptionTitle, styles.dangerText]}>Leave Bubble</Text>
+                  <Text style={styles.settingsOptionSubtitle}>Remove yourself from this bubble</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                style={styles.dangerOption}
+                onPress={handleDeleteBubble}
+              >
+                <View style={[styles.settingsOptionIcon, styles.dangerIcon]}>
+                  <Ionicons name="trash" color="#EF4444" size={20} />
+                </View>
+                <View style={styles.settingsOptionContent}>
+                  <Text style={[styles.settingsOptionTitle, styles.dangerText]}>Delete Bubble</Text>
+                  <Text style={styles.settingsOptionSubtitle}>Permanently delete this bubble</Text>
+                </View>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Rename Modal */}
+      <Modal
+        visible={showRenameModal}
+        animationType="fade"
+        transparent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.renameModalContainer}>
+            <Text style={styles.renameModalTitle}>Rename Bubble</Text>
+            
+            <TextInput
+              style={styles.renameInput}
+              placeholder="Enter new bubble name"
+              placeholderTextColor="#9CA3AF"
+              value={newBubbleName}
+              onChangeText={setNewBubbleName}
+              autoFocus
+            />
+            
+            <View style={styles.renameModalButtons}>
+              <Pressable
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowRenameModal(false);
+                  setNewBubbleName('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              
+              <Pressable
+                style={styles.saveButton}
+                onPress={handleRenameBubble}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Members Modal */}
+      <Modal
+        visible={showMembersModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Bubble Members</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowMembersModal(false)}
+            >
+              <Ionicons name="close" color="#6B7280" size={20} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {bubbleMembers.map((member) => (
+              <View key={member.id} style={styles.memberCard}>
+                <View style={styles.memberAvatar}>
+                  <Ionicons name="person" color="#10B981" size={20} />
+                </View>
+                <View style={styles.memberInfo}>
+                  <Text style={styles.memberName}>{member.name}</Text>
+                  <Text style={styles.memberEmail}>{member.email}</Text>
+                  <Text style={styles.memberStats}>
+                    {member.points} points • Level {member.level}
+                  </Text>
+                </View>
+                {member.id === user?.id && (
+                  <View style={styles.youBadge}>
+                    <Text style={styles.youBadgeText}>You</Text>
+                  </View>
+                )}
+              </View>
+            ))}
           </ScrollView>
         </View>
       </Modal>
@@ -683,6 +1027,197 @@ const styles = StyleSheet.create({
   },
   joinNewBubbleText: {
     fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
+  },
+  settingsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  settingsOption: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  settingsOptionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F9FAFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  settingsOptionContent: {
+    flex: 1,
+  },
+  settingsOptionTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  settingsOptionSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  loadingText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  dangerZone: {
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#FEE2E2',
+  },
+  dangerZoneTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#DC2626',
+    marginBottom: 16,
+  },
+  dangerOption: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  dangerIcon: {
+    backgroundColor: '#FEE2E2',
+  },
+  dangerText: {
+    color: '#DC2626',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  renameModalContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 320,
+  },
+  renameModalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  renameInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#111827',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 20,
+  },
+  renameModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+  },
+  memberCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  memberAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  memberInfo: {
+    flex: 1,
+  },
+  memberName: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  memberEmail: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  memberStats: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
+  },
+  youBadge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  youBadgeText: {
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
     color: '#10B981',
   },
