@@ -80,3 +80,56 @@ export default function RootLayout() {
       <RootLayoutContent />
     </AuthProvider>
   );
+}
+
+const styles = StyleSheet.create({
+  splashContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  splashContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    marginBottom: 32,
+  },
+  logoBubble: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  titleContainer: {
+    alignItems: 'center',
+  },
+  appTitle: {
+    fontSize: 42,
+    fontFamily: 'Poppins-Bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#ffffff',
+    textAlign: 'center',
+    opacity: 0.9,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+}
+)
