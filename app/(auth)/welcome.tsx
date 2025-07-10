@@ -15,13 +15,10 @@ export default function WelcomeScreen() {
             <Leaf color="#ffffff" size={40} />
           </View>
         </View>
-        
         <Text style={styles.title}>GreenBubble</Text>
-        
         <Text style={styles.subtitle}>
           Join your friends in weekly environmental challenges and make a positive impact together
         </Text>
-        
         <View style={styles.featuresContainer}>
           <View style={styles.feature}>
             <Users color="#ffffff" size={24} />
@@ -36,7 +33,6 @@ export default function WelcomeScreen() {
             <Text style={styles.featureText}>Track your CO2 impact</Text>
           </View>
         </View>
-        
         <View style={styles.buttonContainer}>
           <Pressable 
             style={styles.primaryButton}
@@ -44,7 +40,6 @@ export default function WelcomeScreen() {
           >
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </Pressable>
-          
           <Pressable 
             style={styles.secondaryButton}
             onPress={() => router.push('/(auth)/login')}
