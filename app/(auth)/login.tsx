@@ -139,7 +139,6 @@ export default function LoginScreen() {
 
         <View style={styles.linkContainer}>
           <Text style={styles.linkQuestion}>Don't have an account?</Text>
-          <Text> </Text>
           <Pressable onPress={() => router.push('/(auth)/signup')}>
             <Text style={styles.linkText}>Sign up</Text>
           </Pressable>
