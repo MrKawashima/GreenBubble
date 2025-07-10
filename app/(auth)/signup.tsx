@@ -251,10 +251,10 @@ export default function SignupScreen() {
 
         <View style={styles.termsContainer}>
           <Text style={styles.termsText}>
-            By creating an account, you agree to our{' '}
-            <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-            <Text style={styles.termsLink}>Privacy Policy</Text>
-          </Text>
+            By creating an account, you agree to our </Text>
+          <Text style={styles.termsLink}>Terms of Service</Text>
+          <Text style={styles.termsText}> and </Text>
+          <Text style={styles.termsLink}>Privacy Policy</Text>
         </View>
 
         <Pressable 
@@ -268,7 +268,8 @@ export default function SignupScreen() {
         </Pressable>
 
         <View style={styles.linkContainer}>
-          <Text style={styles.linkQuestion}>Already have an account? </Text>
+          <Text style={styles.linkQuestion}>Already have an account?</Text>
+          <Text style={styles.linkQuestion}> </Text>
           <Pressable onPress={() => router.push('/(auth)/login')}>
             <Text style={styles.linkText}>Sign in</Text>
           </Pressable>
