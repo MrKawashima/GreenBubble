@@ -3,17 +3,20 @@ import { useRef } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/config/supabase';
 import { SupabaseService } from '@/services/supabaseService';
-import { User } from '@/types';
+import { User, UserBubble } from '@/types';
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  userBubbles: UserBubble[];
   loading: boolean;
   authLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserData: (updates: Partial<User>) => Promise<void>;
+  refreshUserBubbles: () => Promise<void>;
+  switchActiveBubble: (bubbleId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -25,6 +28,7 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [userBubbles, setUserBubbles] = useState<UserBubble[]>([]);
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const mounted = useRef(true);
@@ -55,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await loadUserData(session.user.id);
         } else {
           setUser(null);
+          setUserBubbles([]);
           setAuthLoading(false);
         }
       }
@@ -68,15 +73,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string) => {
     try {
-      const userData = await SupabaseService.getUser(userId);
+      const [userData, bubbles] = await Promise.all([
+        SupabaseService.getUser(userId),
+        SupabaseService.getUserBubbles(userId)
+      ]);
+      
       if (mounted.current) {
         setUser(userData);
+        setUserBubbles(bubbles);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {
       if (mounted.current) {
         setAuthLoading(false);
+      }
+    }
+  };
+
+  const refreshUserBubbles = async () => {
+    if (user) {
+      try {
+        const bubbles = await SupabaseService.getUserBubbles(user.id);
+        setUserBubbles(bubbles);
+      } catch (error) {
+        console.error('Error refreshing user bubbles:', error);
+      }
+    }
+  };
+
+  const switchActiveBubble = async (bubbleId: string) => {
+    if (user) {
+      try {
+        await SupabaseService.switchActiveBubble(user.id, bubbleId);
+        setUser({ ...user, activeBubbleId: bubbleId });
+      } catch (error) {
+        console.error('Error switching active bubble:', error);
+        throw error;
       }
     }
   };
@@ -128,12 +161,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     session,
     user,
+    userBubbles,
     loading,
     authLoading,
     signIn,
     signUp,
     logout,
-    updateUserData
+    updateUserData,
+    refreshUserBubbles,
+    switchActiveBubble
   };
 
   return (

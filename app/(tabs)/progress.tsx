@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Award, Leaf, TrendingUp, Users, Calendar } from 'lucide-react-native';
+import { Award, Leaf, TrendingUp, Users, Calendar, ChevronDown, X, Filter } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
-import { Bubble, ChallengeCompletion } from '@/types';
+import { Bubble, ChallengeCompletion, UserBubble } from '@/types';
 
 interface Badge {
   id: string;
@@ -14,26 +14,47 @@ interface Badge {
   earned: boolean;
 }
 
+interface BubbleProgress {
+  bubble: Bubble;
+  userBubble: UserBubble;
+  completions: ChallengeCompletion[];
+}
+
 export default function ProgressScreen() {
-  const [bubble, setBubble] = useState<Bubble | null>(null);
-  const [userCompletions, setUserCompletions] = useState<ChallengeCompletion[]>([]);
+  const [bubbleProgresses, setBubbleProgresses] = useState<BubbleProgress[]>([]);
+  const [selectedBubbleFilter, setSelectedBubbleFilter] = useState<string | null>(null);
+  const [showBubbleFilter, setShowBubbleFilter] = useState(false);
   const [badges, setBadges] = useState<Badge[]>([]);
-  const { user } = useAuth();
+  const { user, userBubbles } = useAuth();
 
   useEffect(() => {
     loadProgressData();
-  }, [user?.bubbleId]);
+  }, [userBubbles, selectedBubbleFilter]);
 
   const loadProgressData = async () => {
-    if (!user?.bubbleId) return;
+    if (userBubbles.length === 0) return;
 
     try {
-      const bubbleData = await SupabaseService.getBubble(user.bubbleId);
-      setBubble(bubbleData);
+      const progresses: BubbleProgress[] = [];
+      
+      for (const userBubble of userBubbles) {
+        if (selectedBubbleFilter && selectedBubbleFilter !== userBubble.bubbleId) {
+          continue;
+        }
 
-      // Load user's challenge completions (simplified for demo)
-      // In a real app, you'd have a more sophisticated query
-      setUserCompletions([]);
+        const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
+        if (bubble) {
+          // For demo, create some mock completions
+          const mockCompletions: ChallengeCompletion[] = [];
+          progresses.push({
+            bubble,
+            userBubble,
+            completions: mockCompletions
+          });
+        }
+      }
+
+      setBubbleProgresses(progresses);
 
       // Demo badges
       setBadges([
@@ -42,7 +63,7 @@ export default function ProgressScreen() {
           name: 'First Step',
           description: 'Complete your first challenge',
           icon: '🌱',
-          earned: (user.points || 0) > 0
+          earned: (user?.points || 0) > 0
         },
         {
           id: '2',
@@ -63,10 +84,17 @@ export default function ProgressScreen() {
           name: 'Team Player',
           description: 'Join a Bubble',
           icon: '👥',
-          earned: !!user.bubbleId
+          earned: userBubbles.length > 0
         },
         {
           id: '5',
+          name: 'Multi-Bubble Master',
+          description: 'Join 3 different bubbles',
+          icon: '🌐',
+          earned: userBubbles.length >= 3
+        },
+        {
+          id: '6',
           name: 'Consistency King',
           description: 'Complete challenges 3 weeks in a row',
           icon: '👑',
@@ -93,8 +121,19 @@ export default function ProgressScreen() {
     return thresholds[level] - points;
   };
 
+  const getFilteredBubbleName = () => {
+    if (!selectedBubbleFilter) return 'All Bubbles';
+    const bubble = userBubbles.find(ub => ub.bubbleId === selectedBubbleFilter);
+    return bubble ? `Bubble ${bubble.bubbleId.slice(0, 8)}` : 'Unknown Bubble';
+  };
+
   const earnedBadges = badges.filter(b => b.earned);
   const availableBadges = badges.filter(b => !b.earned);
+
+  // Calculate totals based on filter
+  const totalCompletions = bubbleProgresses.reduce((sum, bp) => sum + bp.completions.length, 0);
+  const totalBubblePoints = bubbleProgresses.reduce((sum, bp) => sum + bp.userBubble.points, 0);
+  const totalBubbleCO2 = bubbleProgresses.reduce((sum, bp) => sum + bp.userBubble.co2Saved, 0);
 
   return (
     <ScrollView style={styles.container}>
@@ -104,6 +143,20 @@ export default function ProgressScreen() {
       >
         <Text style={styles.headerTitle}>Your Progress</Text>
         <Text style={styles.headerSubtitle}>Track your environmental impact</Text>
+        
+        {/* Bubble Filter */}
+        {userBubbles.length > 1 && (
+          <Pressable 
+            style={styles.bubbleFilter}
+            onPress={() => setShowBubbleFilter(true)}
+          >
+            <View style={styles.filterInfo}>
+              <Filter color="#ffffff" size={16} />
+              <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
+            </View>
+            <ChevronDown color="#ffffff" size={16} />
+          </Pressable>
+        )}
       </LinearGradient>
 
       <View style={styles.content}>
@@ -143,7 +196,7 @@ export default function ProgressScreen() {
               <Leaf color="#10B981" size={24} />
             </View>
             <Text style={styles.statNumber}>
-              {bubble?.totalCO2Saved || 0}kg
+              {totalBubbleCO2.toFixed(1)}kg
             </Text>
             <Text style={styles.statLabel}>CO₂ Saved</Text>
           </View>
@@ -153,7 +206,7 @@ export default function ProgressScreen() {
               <Calendar color="#3B82F6" size={24} />
             </View>
             <Text style={styles.statNumber}>
-              {userCompletions.length}
+              {totalCompletions}
             </Text>
             <Text style={styles.statLabel}>Challenges</Text>
           </View>
@@ -163,9 +216,9 @@ export default function ProgressScreen() {
               <Users color="#F59E0B" size={24} />
             </View>
             <Text style={styles.statNumber}>
-              {bubble?.members.length || 0}
+              {userBubbles.length}
             </Text>
-            <Text style={styles.statLabel}>Bubble Size</Text>
+            <Text style={styles.statLabel}>Bubbles</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -178,6 +231,45 @@ export default function ProgressScreen() {
             <Text style={styles.statLabel}>Badges</Text>
           </View>
         </View>
+
+        {/* Bubble Progress Cards */}
+        {bubbleProgresses.length > 0 && (
+          <View style={styles.bubblesSection}>
+            <Text style={styles.sectionTitle}>
+              {selectedBubbleFilter ? 'Bubble Progress' : 'Your Bubbles'}
+            </Text>
+            {bubbleProgresses.map((progress) => (
+              <View key={progress.bubble.id} style={styles.bubbleCard}>
+                <View style={styles.bubbleHeader}>
+                  <View style={styles.bubbleIcon}>
+                    <Users color="#10B981" size={24} />
+                  </View>
+                  <View style={styles.bubbleInfo}>
+                    <Text style={styles.bubbleTitle}>{progress.bubble.name}</Text>
+                    <Text style={styles.bubbleMembers}>
+                      {progress.bubble.members.length} members
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={styles.bubbleStats}>
+                  <View style={styles.bubbleStat}>
+                    <Text style={styles.bubbleStatNumber}>{progress.userBubble.points}</Text>
+                    <Text style={styles.bubbleStatLabel}>Your Points</Text>
+                  </View>
+                  <View style={styles.bubbleStat}>
+                    <Text style={styles.bubbleStatNumber}>{progress.userBubble.co2Saved}kg</Text>
+                    <Text style={styles.bubbleStatLabel}>Your CO₂</Text>
+                  </View>
+                  <View style={styles.bubbleStat}>
+                    <Text style={styles.bubbleStatNumber}>{progress.bubble.totalPoints}</Text>
+                    <Text style={styles.bubbleStatLabel}>Total Points</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Earned Badges */}
         {earnedBadges.length > 0 && (
@@ -212,28 +304,70 @@ export default function ProgressScreen() {
             </View>
           </View>
         )}
-
-        {/* Bubble Impact */}
-        {bubble && (
-          <View style={styles.bubbleCard}>
-            <Text style={styles.bubbleTitle}>{bubble.name} Impact</Text>
-            <View style={styles.bubbleStats}>
-              <View style={styles.bubbleStat}>
-                <Text style={styles.bubbleStatNumber}>{bubble.totalPoints}</Text>
-                <Text style={styles.bubbleStatLabel}>Total Points</Text>
-              </View>
-              <View style={styles.bubbleStat}>
-                <Text style={styles.bubbleStatNumber}>{bubble.totalCO2Saved}kg</Text>
-                <Text style={styles.bubbleStatLabel}>CO₂ Saved</Text>
-              </View>
-              <View style={styles.bubbleStat}>
-                <Text style={styles.bubbleStatNumber}>{bubble.members.length}</Text>
-                <Text style={styles.bubbleStatLabel}>Members</Text>
-              </View>
-            </View>
-          </View>
-        )}
       </View>
+
+      {/* Bubble Filter Modal */}
+      <Modal
+        visible={showBubbleFilter}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filter by Bubble</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowBubbleFilter(false)}
+            >
+              <X color="#6B7280" size={24} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <Pressable
+              style={[
+                styles.filterOption,
+                !selectedBubbleFilter && styles.activeFilterOption
+              ]}
+              onPress={() => {
+                setSelectedBubbleFilter(null);
+                setShowBubbleFilter(false);
+              }}
+            >
+              <Text style={styles.filterOptionText}>All Bubbles</Text>
+              {!selectedBubbleFilter && (
+                <Award color="#10B981" size={20} />
+              )}
+            </Pressable>
+
+            {userBubbles.map((userBubble) => (
+              <Pressable
+                key={userBubble.bubbleId}
+                style={[
+                  styles.filterOption,
+                  selectedBubbleFilter === userBubble.bubbleId && styles.activeFilterOption
+                ]}
+                onPress={() => {
+                  setSelectedBubbleFilter(userBubble.bubbleId);
+                  setShowBubbleFilter(false);
+                }}
+              >
+                <View style={styles.filterOptionContent}>
+                  <View style={styles.filterOptionIcon}>
+                    <Users color="#10B981" size={20} />
+                  </View>
+                  <Text style={styles.filterOptionText}>
+                    Bubble {userBubble.bubbleId.slice(0, 8)}
+                  </Text>
+                </View>
+                {selectedBubbleFilter === userBubble.bubbleId && (
+                  <Award color="#10B981" size={20} />
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -258,6 +392,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#ffffff',
     opacity: 0.9,
+    marginBottom: 16,
+  },
+  bubbleFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  filterInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
   },
   content: {
     padding: 24,
@@ -354,13 +508,72 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
-  badgesSection: {
+  bubblesSection: {
     gap: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'Poppins-SemiBold',
     color: '#111827',
+  },
+  bubbleCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bubbleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  bubbleIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  bubbleInfo: {
+    flex: 1,
+  },
+  bubbleTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  bubbleMembers: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  bubbleStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  bubbleStat: {
+    alignItems: 'center',
+  },
+  bubbleStatNumber: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    color: '#10B981',
+    marginBottom: 4,
+  },
+  bubbleStatLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  badgesSection: {
+    gap: 16,
   },
   badgesGrid: {
     flexDirection: 'row',
@@ -410,39 +623,73 @@ const styles = StyleSheet.create({
   lockedText: {
     opacity: 0.6,
   },
-  bubbleCard: {
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
     backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    flex: 1,
     padding: 24,
+  },
+  filterOption: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
-  bubbleTitle: {
-    fontSize: 18,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#111827',
-    marginBottom: 16,
-    textAlign: 'center',
+  activeFilterOption: {
+    borderWidth: 2,
+    borderColor: '#10B981',
   },
-  bubbleStats: {
+  filterOptionContent: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  bubbleStat: {
     alignItems: 'center',
+    flex: 1,
   },
-  bubbleStatNumber: {
-    fontSize: 20,
-    fontFamily: 'Poppins-Bold',
-    color: '#10B981',
-    marginBottom: 4,
+  filterOptionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  bubbleStatLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#6B7280',
+  filterOptionText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
   },
 });

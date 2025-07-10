@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  bubbleId: string;
+  activeBubbleId?: string; // Currently selected bubble
   points: number;
   level: number;
   badges: string[];
@@ -14,13 +14,22 @@ export interface Bubble {
   id: string;
   name: string;
   description: string;
-  isPrivate: boolean;
-  inviteCode?: string;
+  inviteCode: string; // Always required now
   members: string[];
   totalPoints: number;
   totalCO2Saved: number;
   createdBy: string;
   createdAt: Date;
+}
+
+export interface UserBubble {
+  id: string;
+  userId: string;
+  bubbleId: string;
+  joinedAt: Date;
+  role: 'member' | 'admin';
+  points: number; // Points earned in this specific bubble
+  co2Saved: number; // CO2 saved in this specific bubble
 }
 
 export interface Challenge {

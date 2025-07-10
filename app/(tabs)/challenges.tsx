@@ -1,39 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Image, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Camera, CircleCheck as CheckCircle, Upload, X } from 'lucide-react-native';
+import { Camera, CircleCheck as CheckCircle, Upload, X, ChevronDown, Users } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
-import { Challenge } from '@/types';
+import { Challenge, Bubble } from '@/types';
 import { TextInput } from 'react-native';
 
 export default function ChallengesScreen() {
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
+  const [activeBubble, setActiveBubble] = useState<Bubble | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [userCompleted, setUserCompleted] = useState(false);
-  const { user } = useAuth();
+  const [showBubbleSelector, setShowBubbleSelector] = useState(false);
+  const { user, userBubbles, switchActiveBubble } = useAuth();
 
   useEffect(() => {
     loadChallenge();
-  }, []);
+  }, [user?.activeBubbleId]);
 
   const loadChallenge = async () => {
     try {
       const challenge = await SupabaseService.getActiveChallenge();
       setActiveChallenge(challenge);
 
-      if (challenge && user?.bubbleId) {
-        const completions = await SupabaseService.getChallengeCompletions(
-          user.bubbleId,
-          challenge.id
-        );
+      if (challenge && user?.activeBubbleId) {
+        const [bubbleData, completions] = await Promise.all([
+          SupabaseService.getBubble(user.activeBubbleId),
+          SupabaseService.getChallengeCompletions(user.activeBubbleId, challenge.id)
+        ]);
+        
+        setActiveBubble(bubbleData);
         setUserCompleted(completions.some(c => c.userId === user.id));
       }
     } catch (error) {
       console.error('Error loading challenge:', error);
+    }
+  };
+
+  const handleSwitchBubble = async (bubbleId: string) => {
+    try {
+      await switchActiveBubble(bubbleId);
+      setShowBubbleSelector(false);
+      await loadChallenge();
+    } catch (error) {
+      console.error('Error switching bubble:', error);
     }
   };
 
@@ -77,7 +91,7 @@ export default function ChallengesScreen() {
   };
 
   const handleCompleteChallenge = async () => {
-    if (!activeChallenge || !user?.bubbleId) return;
+    if (!activeChallenge || !user?.activeBubbleId) return;
 
     if (!selectedImage && !comment.trim()) {
       Alert.alert('Required', 'Please add a photo or comment to complete the challenge');
@@ -98,7 +112,7 @@ export default function ChallengesScreen() {
       await SupabaseService.completeChallenge({
         userId: user.id,
         challengeId: activeChallenge.id,
-        bubbleId: user.bubbleId,
+        bubbleId: user.activeBubbleId,
         photo: photoUrl,
         comment: comment.trim() || undefined,
         points: activeChallenge.points,
@@ -121,6 +135,27 @@ export default function ChallengesScreen() {
     }
   };
 
+  if (!user?.activeBubbleId || userBubbles.length === 0) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient 
+          colors={['#10B981', '#059669']} 
+          style={styles.header}
+        >
+          <Text style={styles.headerTitle}>Challenges</Text>
+        </LinearGradient>
+        
+        <View style={styles.emptyContainer}>
+          <CheckCircle color="#6B7280" size={64} />
+          <Text style={styles.emptyTitle}>No Active Bubble</Text>
+          <Text style={styles.emptyText}>
+            Join a bubble to participate in environmental challenges!
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   if (!activeChallenge) {
     return (
       <View style={styles.container}>
@@ -129,6 +164,22 @@ export default function ChallengesScreen() {
           style={styles.header}
         >
           <Text style={styles.headerTitle}>Challenges</Text>
+          
+          {/* Bubble Selector */}
+          {userBubbles.length > 1 && (
+            <Pressable 
+              style={styles.bubbleSelector}
+              onPress={() => setShowBubbleSelector(true)}
+            >
+              <View style={styles.bubbleInfo}>
+                <Users color="#ffffff" size={16} />
+                <Text style={styles.bubbleName}>
+                  {activeBubble?.name || 'Select Bubble'}
+                </Text>
+              </View>
+              <ChevronDown color="#ffffff" size={16} />
+            </Pressable>
+          )}
         </LinearGradient>
         
         <View style={styles.emptyContainer}>
@@ -149,6 +200,22 @@ export default function ChallengesScreen() {
         style={styles.header}
       >
         <Text style={styles.headerTitle}>This Week's Challenge</Text>
+        
+        {/* Bubble Selector */}
+        {userBubbles.length > 1 && (
+          <Pressable 
+            style={styles.bubbleSelector}
+            onPress={() => setShowBubbleSelector(true)}
+          >
+            <View style={styles.bubbleInfo}>
+              <Users color="#ffffff" size={16} />
+              <Text style={styles.bubbleName}>
+                {activeBubble?.name || 'Select Bubble'}
+              </Text>
+            </View>
+            <ChevronDown color="#ffffff" size={16} />
+          </Pressable>
+        )}
       </LinearGradient>
 
       <View style={styles.content}>
@@ -250,6 +317,53 @@ export default function ChallengesScreen() {
           </Text>
         </View>
       </View>
+
+      {/* Bubble Selector Modal */}
+      <Modal
+        visible={showBubbleSelector}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Bubble</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowBubbleSelector(false)}
+            >
+              <X color="#6B7280" size={24} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {userBubbles.map((userBubble) => (
+              <Pressable
+                key={userBubble.bubbleId}
+                style={[
+                  styles.bubbleOption,
+                  user?.activeBubbleId === userBubble.bubbleId && styles.activeBubbleOption
+                ]}
+                onPress={() => handleSwitchBubble(userBubble.bubbleId)}
+              >
+                <View style={styles.bubbleOptionContent}>
+                  <View style={styles.bubbleOptionIcon}>
+                    <Users color="#10B981" size={24} />
+                  </View>
+                  <View style={styles.bubbleOptionInfo}>
+                    <Text style={styles.bubbleOptionName}>Loading...</Text>
+                    <Text style={styles.bubbleOptionStats}>
+                      {userBubble.points} points • {userBubble.co2Saved}kg CO₂
+                    </Text>
+                  </View>
+                </View>
+                {user?.activeBubbleId === userBubble.bubbleId && (
+                  <CheckCircle color="#10B981" size={20} />
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -267,6 +381,26 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontFamily: 'Poppins-Bold',
+    color: '#ffffff',
+  },
+  bubbleSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 16,
+  },
+  bubbleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bubbleName: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
   },
   content: {
@@ -492,5 +626,83 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 24,
+  },
+  bubbleOption: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  activeBubbleOption: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  bubbleOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  bubbleOptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  bubbleOptionInfo: {
+    flex: 1,
+  },
+  bubbleOptionName: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  bubbleOptionStats: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
   },
 });

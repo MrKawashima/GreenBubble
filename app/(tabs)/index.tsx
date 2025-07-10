@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Users, Award, Leaf, Camera, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { Users, Award, Leaf, Camera, CircleCheck as CheckCircle, ChevronDown, Plus, Hash, X } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
 import { Challenge, Bubble, ChallengeCompletion } from '@/types';
@@ -9,23 +9,24 @@ import { router } from 'expo-router';
 
 export default function HomeScreen() {
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
-  const [bubble, setBubble] = useState<Bubble | null>(null);
+  const [activeBubble, setActiveBubble] = useState<Bubble | null>(null);
   const [completions, setCompletions] = useState<ChallengeCompletion[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [userCompleted, setUserCompleted] = useState(false);
-  const { user } = useAuth();
+  const [showBubbleSelector, setShowBubbleSelector] = useState(false);
+  const { user, userBubbles, switchActiveBubble, refreshUserBubbles } = useAuth();
 
   const loadData = async () => {
-    if (!user?.bubbleId) return;
+    if (!user?.activeBubbleId) return;
 
     try {
       const [challenge, bubbleData] = await Promise.all([
         SupabaseService.getActiveChallenge(),
-        SupabaseService.getBubble(user.bubbleId)
+        SupabaseService.getBubble(user.activeBubbleId)
       ]);
 
       setActiveChallenge(challenge);
-      setBubble(bubbleData);
+      setActiveBubble(bubbleData);
 
       if (challenge && bubbleData) {
         const challengeCompletions = await SupabaseService.getChallengeCompletions(
@@ -42,11 +43,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     loadData();
-  }, [user?.bubbleId]);
+  }, [user?.activeBubbleId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await Promise.all([loadData(), refreshUserBubbles()]);
     setRefreshing(false);
   };
 
@@ -59,7 +60,22 @@ export default function HomeScreen() {
     }
   };
 
-  if (!user?.bubbleId) {
+  const handleSwitchBubble = async (bubbleId: string) => {
+    try {
+      await switchActiveBubble(bubbleId);
+      setShowBubbleSelector(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error switching bubble:', error);
+    }
+  };
+
+  const handleJoinNewBubble = () => {
+    setShowBubbleSelector(false);
+    router.push('/(auth)/onboarding');
+  };
+
+  if (userBubbles.length === 0) {
     return (
       <View style={styles.container}>
         <LinearGradient 
@@ -94,15 +110,31 @@ export default function HomeScreen() {
       >
         <View style={styles.headerContent}>
           <Text style={styles.greeting}>Welcome back, {user?.name}!</Text>
-          <View style={styles.bubbleInfo}>
-            <Users color="#ffffff" size={20} />
-            <Text style={styles.bubbleName}>{bubble?.name}</Text>
-          </View>
+          
+          {/* Bubble Selector */}
+          <Pressable 
+            style={styles.bubbleSelector}
+            onPress={() => setShowBubbleSelector(true)}
+          >
+            <View style={styles.bubbleInfo}>
+              <Users color="#ffffff" size={20} />
+              <Text style={styles.bubbleName}>
+                {activeBubble?.name || 'Select Bubble'}
+              </Text>
+            </View>
+            <ChevronDown color="#ffffff" size={20} />
+          </Pressable>
+          
+          {userBubbles.length > 1 && (
+            <Text style={styles.bubbleCount}>
+              {userBubbles.length} bubbles joined
+            </Text>
+          )}
         </View>
       </LinearGradient>
 
       <View style={styles.content}>
-        {activeChallenge ? (
+        {activeChallenge && activeBubble ? (
           <View style={styles.challengeCard}>
             <View style={styles.challengeHeader}>
               <Text style={styles.challengeTitle}>This Week's Challenge</Text>
@@ -121,7 +153,7 @@ export default function HomeScreen() {
                 <Text style={styles.statLabel}>Completed</Text>
               </View>
               <View style={styles.stat}>
-                <Text style={styles.statNumber}>{bubble?.members.length || 0}</Text>
+                <Text style={styles.statNumber}>{activeBubble.members.length}</Text>
                 <Text style={styles.statLabel}>Members</Text>
               </View>
               <View style={styles.stat}>
@@ -155,25 +187,27 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <View style={styles.bubbleStatsCard}>
-          <Text style={styles.cardTitle}>Bubble Impact</Text>
-          <View style={styles.impactGrid}>
-            <View style={styles.impactItem}>
-              <View style={styles.impactIcon}>
-                <Leaf color="#10B981" size={24} />
+        {activeBubble && (
+          <View style={styles.bubbleStatsCard}>
+            <Text style={styles.cardTitle}>{activeBubble.name} Impact</Text>
+            <View style={styles.impactGrid}>
+              <View style={styles.impactItem}>
+                <View style={styles.impactIcon}>
+                  <Leaf color="#10B981" size={24} />
+                </View>
+                <Text style={styles.impactNumber}>{activeBubble.totalCO2Saved}kg</Text>
+                <Text style={styles.impactLabel}>CO₂ Saved</Text>
               </View>
-              <Text style={styles.impactNumber}>{bubble?.totalCO2Saved || 0}kg</Text>
-              <Text style={styles.impactLabel}>CO₂ Saved</Text>
-            </View>
-            <View style={styles.impactItem}>
-              <View style={styles.impactIcon}>
-                <Award color="#F59E0B" size={24} />
+              <View style={styles.impactItem}>
+                <View style={styles.impactIcon}>
+                  <Award color="#F59E0B" size={24} />
+                </View>
+                <Text style={styles.impactNumber}>{activeBubble.totalPoints}</Text>
+                <Text style={styles.impactLabel}>Total Points</Text>
               </View>
-              <Text style={styles.impactNumber}>{bubble?.totalPoints || 0}</Text>
-              <Text style={styles.impactLabel}>Total Points</Text>
             </View>
           </View>
-        </View>
+        )}
 
         {completions.length > 0 && (
           <View style={styles.recentActivity}>
@@ -194,6 +228,58 @@ export default function HomeScreen() {
           </View>
         )}
       </View>
+
+      {/* Bubble Selector Modal */}
+      <Modal
+        visible={showBubbleSelector}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Bubble</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowBubbleSelector(false)}
+            >
+              <X color="#6B7280" size={24} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {userBubbles.map((userBubble) => (
+              <Pressable
+                key={userBubble.bubbleId}
+                style={[
+                  styles.bubbleOption,
+                  user?.activeBubbleId === userBubble.bubbleId && styles.activeBubbleOption
+                ]}
+                onPress={() => handleSwitchBubble(userBubble.bubbleId)}
+              >
+                <View style={styles.bubbleOptionContent}>
+                  <View style={styles.bubbleOptionIcon}>
+                    <Users color="#10B981" size={24} />
+                  </View>
+                  <View style={styles.bubbleOptionInfo}>
+                    <Text style={styles.bubbleOptionName}>Loading...</Text>
+                    <Text style={styles.bubbleOptionStats}>
+                      {userBubble.points} points • {userBubble.co2Saved}kg CO₂
+                    </Text>
+                  </View>
+                </View>
+                {user?.activeBubbleId === userBubble.bubbleId && (
+                  <CheckCircle color="#10B981" size={20} />
+                )}
+              </Pressable>
+            ))}
+
+            <Pressable style={styles.joinNewBubble} onPress={handleJoinNewBubble}>
+              <Plus color="#10B981" size={24} />
+              <Text style={styles.joinNewBubbleText}>Join Another Bubble</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -216,6 +302,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
     color: '#ffffff',
   },
+  bubbleSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 8,
+  },
   bubbleInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -223,9 +319,15 @@ const styles = StyleSheet.create({
   },
   bubbleName: {
     fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+  },
+  bubbleCount: {
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#ffffff',
-    opacity: 0.9,
+    opacity: 0.8,
+    marginTop: 4,
   },
   content: {
     padding: 24,
@@ -470,5 +572,101 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#047857',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 24,
+  },
+  bubbleOption: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  activeBubbleOption: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  bubbleOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  bubbleOptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  bubbleOptionInfo: {
+    flex: 1,
+  },
+  bubbleOptionName: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  bubbleOptionStats: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  joinNewBubble: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 12,
+    borderWidth: 2,
+    borderColor: '#D1FAE5',
+    borderStyle: 'dashed',
+  },
+  joinNewBubbleText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
   },
 });

@@ -1,103 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clock, Award, Leaf, X, Calendar, MessageCircle, Camera } from 'lucide-react-native';
+import { Clock, Award, Leaf, X, Calendar, MessageCircle, Camera, ChevronDown, Users, Filter } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
-import { ChallengeCompletion, Challenge } from '@/types';
+import { ChallengeCompletion, Challenge, Bubble } from '@/types';
 
 interface HistoryItem extends ChallengeCompletion {
   challengeTitle: string;
   challengeCategory: string;
+  bubbleName?: string;
 }
 
 export default function HistoryScreen() {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [showBubbleFilter, setShowBubbleFilter] = useState(false);
+  const [selectedBubbleFilter, setSelectedBubbleFilter] = useState<string | null>(null);
+  const { user, userBubbles } = useAuth();
 
   useEffect(() => {
     loadHistory();
-  }, [user?.id]);
+  }, [user?.id, selectedBubbleFilter]);
 
   const loadHistory = async () => {
-    if (!user?.id || !user?.bubbleId) {
+    if (!user?.id || userBubbles.length === 0) {
       setLoading(false);
       return;
     }
 
     try {
-      // For demo purposes, we'll create some mock history data
-      // In a real app, you'd query Firestore for user's completed challenges
-      const mockHistory: HistoryItem[] = [
-        {
-          id: '1',
-          userId: user.id,
-          challengeId: 'challenge1',
-          bubbleId: user.bubbleId,
-          completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-          photo: 'https://images.pexels.com/photos/3735747/pexels-photo-3735747.jpeg?auto=compress&cs=tinysrgb&w=800',
-          comment: 'Biked to work today instead of driving! Felt great to get some exercise and help the environment.',
-          points: 50,
-          co2Saved: 2.5,
-          challengeTitle: 'Bike to Work Day',
-          challengeCategory: 'transport'
-        },
-        {
-          id: '2',
-          userId: user.id,
-          challengeId: 'challenge2',
-          bubbleId: user.bubbleId,
-          completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-          photo: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800',
-          comment: 'Made a delicious vegetarian pasta dish! My family loved it.',
-          points: 30,
-          co2Saved: 1.8,
-          challengeTitle: 'Meatless Monday',
-          challengeCategory: 'food'
-        },
-        {
-          id: '3',
-          userId: user.id,
-          challengeId: 'challenge3',
-          bubbleId: user.bubbleId,
-          completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
-          photo: 'https://images.pexels.com/photos/3735747/pexels-photo-3735747.jpeg?auto=compress&cs=tinysrgb&w=800',
-          comment: 'Collected 8 pieces of litter during my morning walk. Every little bit helps!',
-          points: 40,
-          co2Saved: 0.5,
-          challengeTitle: 'Litter Cleanup',
-          challengeCategory: 'waste'
-        },
-        {
-          id: '4',
-          userId: user.id,
-          challengeId: 'challenge4',
-          bubbleId: user.bubbleId,
-          completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-          photo: 'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=800',
-          comment: 'Turned off all unnecessary lights and unplugged devices. Small changes make a difference!',
-          points: 25,
-          co2Saved: 1.2,
-          challengeTitle: 'Energy Saving Day',
-          challengeCategory: 'energy'
-        },
-        {
-          id: '5',
-          userId: user.id,
-          challengeId: 'challenge5',
-          bubbleId: user.bubbleId,
-          completedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 2 weeks ago
-          photo: 'https://images.pexels.com/photos/3735747/pexels-photo-3735747.jpeg?auto=compress&cs=tinysrgb&w=800',
-          comment: 'Repurposed old jars into planters for herbs. They look amazing on my windowsill!',
-          points: 35,
-          co2Saved: 0.8,
-          challengeTitle: 'Upcycle Challenge',
-          challengeCategory: 'waste'
-        }
-      ];
+      // Get user's challenge history
+      const completions = await SupabaseService.getUserChallengeHistory(
+        user.id, 
+        selectedBubbleFilter || undefined
+      );
 
+      // For demo purposes, we'll create some mock history data with proper bubble context
+      const mockHistory: HistoryItem[] = [];
+      
+      // Add some sample data for each bubble the user is in
+      for (const userBubble of userBubbles.slice(0, 3)) {
+        const sampleCompletions = [
+          {
+            id: `${userBubble.bubbleId}-1`,
+            userId: user.id,
+            challengeId: 'challenge1',
+            bubbleId: userBubble.bubbleId,
+            completedAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000),
+            photo: 'https://images.pexels.com/photos/3735747/pexels-photo-3735747.jpeg?auto=compress&cs=tinysrgb&w=800',
+            comment: 'Biked to work today instead of driving! Felt great to get some exercise and help the environment.',
+            points: 50,
+            co2Saved: 2.5,
+            challengeTitle: 'Bike to Work Day',
+            challengeCategory: 'transport',
+            bubbleName: `Bubble ${userBubble.bubbleId.slice(0, 8)}`
+          },
+          {
+            id: `${userBubble.bubbleId}-2`,
+            userId: user.id,
+            challengeId: 'challenge2',
+            bubbleId: userBubble.bubbleId,
+            completedAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000),
+            photo: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800',
+            comment: 'Made a delicious vegetarian pasta dish! My family loved it.',
+            points: 30,
+            co2Saved: 1.8,
+            challengeTitle: 'Meatless Monday',
+            challengeCategory: 'food',
+            bubbleName: `Bubble ${userBubble.bubbleId.slice(0, 8)}`
+          }
+        ];
+
+        if (!selectedBubbleFilter || selectedBubbleFilter === userBubble.bubbleId) {
+          mockHistory.push(...sampleCompletions);
+        }
+      }
+
+      // Sort by completion date
+      mockHistory.sort((a, b) => b.completedAt.getTime() - a.completedAt.getTime());
+      
       setHistoryItems(mockHistory);
     } catch (error) {
       console.error('Error loading history:', error);
@@ -147,6 +130,12 @@ export default function HistoryScreen() {
     return date.toLocaleDateString();
   };
 
+  const getFilteredBubbleName = () => {
+    if (!selectedBubbleFilter) return 'All Bubbles';
+    const bubble = userBubbles.find(ub => ub.bubbleId === selectedBubbleFilter);
+    return bubble ? `Bubble ${bubble.bubbleId.slice(0, 8)}` : 'Unknown Bubble';
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -172,6 +161,20 @@ export default function HistoryScreen() {
         >
           <Text style={styles.headerTitle}>History</Text>
           <Text style={styles.headerSubtitle}>Your environmental journey</Text>
+          
+          {/* Bubble Filter */}
+          {userBubbles.length > 1 && (
+            <Pressable 
+              style={styles.bubbleFilter}
+              onPress={() => setShowBubbleFilter(true)}
+            >
+              <View style={styles.filterInfo}>
+                <Filter color="#ffffff" size={16} />
+                <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
+              </View>
+              <ChevronDown color="#ffffff" size={16} />
+            </Pressable>
+          )}
         </LinearGradient>
         
         <View style={styles.emptyContainer}>
@@ -185,6 +188,9 @@ export default function HistoryScreen() {
     );
   }
 
+  const totalPoints = historyItems.reduce((sum, item) => sum + item.points, 0);
+  const totalCO2 = historyItems.reduce((sum, item) => sum + item.co2Saved, 0);
+
   return (
     <View style={styles.container}>
       <LinearGradient 
@@ -194,21 +200,31 @@ export default function HistoryScreen() {
         <Text style={styles.headerTitle}>History</Text>
         <Text style={styles.headerSubtitle}>Your environmental journey</Text>
         
+        {/* Bubble Filter */}
+        {userBubbles.length > 1 && (
+          <Pressable 
+            style={styles.bubbleFilter}
+            onPress={() => setShowBubbleFilter(true)}
+          >
+            <View style={styles.filterInfo}>
+              <Filter color="#ffffff" size={16} />
+              <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
+            </View>
+            <ChevronDown color="#ffffff" size={16} />
+          </Pressable>
+        )}
+        
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{historyItems.length}</Text>
             <Text style={styles.statLabel}>Challenges</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {historyItems.reduce((sum, item) => sum + item.points, 0)}
-            </Text>
+            <Text style={styles.statNumber}>{totalPoints}</Text>
             <Text style={styles.statLabel}>Total Points</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {historyItems.reduce((sum, item) => sum + item.co2Saved, 0).toFixed(1)}kg
-            </Text>
+            <Text style={styles.statNumber}>{totalCO2.toFixed(1)}kg</Text>
             <Text style={styles.statLabel}>CO₂ Saved</Text>
           </View>
         </View>
@@ -232,6 +248,12 @@ export default function HistoryScreen() {
                     <Calendar color="#6B7280" size={14} />
                     <Text style={styles.dateText}>{formatDate(item.completedAt)}</Text>
                   </View>
+                  {userBubbles.length > 1 && (
+                    <View style={styles.bubbleRow}>
+                      <Users color="#6B7280" size={14} />
+                      <Text style={styles.bubbleText}>{item.bubbleName}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
               
@@ -265,6 +287,69 @@ export default function HistoryScreen() {
           </Pressable>
         ))}
       </ScrollView>
+
+      {/* Bubble Filter Modal */}
+      <Modal
+        visible={showBubbleFilter}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filter by Bubble</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowBubbleFilter(false)}
+            >
+              <X color="#6B7280" size={24} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <Pressable
+              style={[
+                styles.filterOption,
+                !selectedBubbleFilter && styles.activeFilterOption
+              ]}
+              onPress={() => {
+                setSelectedBubbleFilter(null);
+                setShowBubbleFilter(false);
+              }}
+            >
+              <Text style={styles.filterOptionText}>All Bubbles</Text>
+              {!selectedBubbleFilter && (
+                <CheckCircle color="#10B981" size={20} />
+              )}
+            </Pressable>
+
+            {userBubbles.map((userBubble) => (
+              <Pressable
+                key={userBubble.bubbleId}
+                style={[
+                  styles.filterOption,
+                  selectedBubbleFilter === userBubble.bubbleId && styles.activeFilterOption
+                ]}
+                onPress={() => {
+                  setSelectedBubbleFilter(userBubble.bubbleId);
+                  setShowBubbleFilter(false);
+                }}
+              >
+                <View style={styles.filterOptionContent}>
+                  <View style={styles.filterOptionIcon}>
+                    <Users color="#10B981" size={20} />
+                  </View>
+                  <Text style={styles.filterOptionText}>
+                    Bubble {userBubble.bubbleId.slice(0, 8)}
+                  </Text>
+                </View>
+                {selectedBubbleFilter === userBubble.bubbleId && (
+                  <CheckCircle color="#10B981" size={20} />
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* Detail Modal */}
       <Modal
@@ -304,6 +389,11 @@ export default function HistoryScreen() {
                     <Text style={styles.detailDate}>
                       Completed {formatDate(selectedItem.completedAt)}
                     </Text>
+                    {userBubbles.length > 1 && (
+                      <Text style={styles.detailBubble}>
+                        In {selectedItem.bubbleName}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
@@ -360,7 +450,27 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#ffffff',
     opacity: 0.9,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  bubbleFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  filterInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
   },
   statsRow: {
     flexDirection: 'row',
@@ -430,9 +540,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginBottom: 2,
   },
   dateText: {
     fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  bubbleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  bubbleText: {
+    fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
@@ -530,6 +651,44 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
   },
+  filterOption: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 24,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  activeFilterOption: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  filterOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  filterOptionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  filterOptionText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+  },
   imageContainer: {
     position: 'relative',
     margin: 24,
@@ -577,6 +736,12 @@ const styles = StyleSheet.create({
   },
   detailDate: {
     fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  detailBubble: {
+    fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },

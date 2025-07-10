@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Modal, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Settings, LogOut, Share, Users, Award, Leaf, Trophy, Star, X, Crown } from 'lucide-react-native';
+import { User, Settings, LogOut, Share, Users, Award, Leaf, Trophy, Star, X, Crown, Plus, Hash } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { BadgeService, LEVELS } from '@/services/badgeService';
 import { Badge, Level } from '@/types';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, userBubbles, logout, refreshUserBubbles } = useAuth();
   const [userBadges, setUserBadges] = useState<Badge[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
-  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showBubblesList, setShowBubblesList] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
 
   useEffect(() => {
@@ -28,6 +28,19 @@ export default function ProfileScreen() {
     ] as any[];
 
     const badges = BadgeService.getUserBadges(mockCompletions);
+    
+    // Add multi-bubble badge
+    badges.push({
+      id: 'multi_bubble',
+      name: 'Multi-Bubble Master',
+      description: 'Join multiple bubbles',
+      icon: '🌐',
+      requirement: 'Join 3 different bubbles',
+      category: 'social',
+      earned: userBubbles.length >= 3,
+      earnedAt: userBubbles.length >= 3 ? new Date() : undefined
+    });
+
     setUserBadges(badges);
   };
 
@@ -53,6 +66,11 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleJoinNewBubble = () => {
+    setShowBubblesList(false);
+    router.push('/(auth)/onboarding');
+  };
+
   const currentLevel = BadgeService.getUserLevel(user?.points || 0);
   const nextLevel = BadgeService.getNextLevel(currentLevel.level);
   const progress = BadgeService.getProgressToNextLevel(user?.points || 0);
@@ -73,6 +91,10 @@ export default function ProfileScreen() {
       }),
     ]).start();
   };
+
+  // Calculate total stats across all bubbles
+  const totalBubblePoints = userBubbles.reduce((sum, ub) => sum + ub.points, 0);
+  const totalBubbleCO2 = userBubbles.reduce((sum, ub) => sum + ub.co2Saved, 0);
 
   const menuItems = [
     {
@@ -157,8 +179,16 @@ export default function ProfileScreen() {
             <View style={styles.statIcon}>
               <Leaf color="#10B981" size={24} />
             </View>
-            <Text style={styles.statNumber}>12.5kg</Text>
+            <Text style={styles.statNumber}>{totalBubbleCO2.toFixed(1)}kg</Text>
             <Text style={styles.statLabel}>CO₂ Saved</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <Users color="#3B82F6" size={24} />
+            </View>
+            <Text style={styles.statNumber}>{userBubbles.length}</Text>
+            <Text style={styles.statLabel}>Bubbles</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -168,6 +198,46 @@ export default function ProfileScreen() {
             <Text style={styles.statNumber}>{earnedBadges.length}</Text>
             <Text style={styles.statLabel}>Badges</Text>
           </View>
+        </View>
+
+        {/* Bubbles Section */}
+        <View style={styles.bubblesSection}>
+          <View style={styles.sectionHeader}>
+            <Users color="#3B82F6" size={20} />
+            <Text style={styles.sectionTitle}>Your Bubbles</Text>
+          </View>
+          
+          <View style={styles.bubblesPreview}>
+            {userBubbles.slice(0, 3).map((userBubble, index) => (
+              <View key={userBubble.id} style={styles.bubblePreviewCard}>
+                <View style={styles.bubblePreviewIcon}>
+                  <Users color="#10B981" size={16} />
+                </View>
+                <Text style={styles.bubblePreviewText}>
+                  Bubble {userBubble.bubbleId.slice(0, 6)}
+                </Text>
+                <Text style={styles.bubblePreviewPoints}>
+                  {userBubble.points}pts
+                </Text>
+              </View>
+            ))}
+            
+            {userBubbles.length > 3 && (
+              <Pressable 
+                style={styles.moreBubblesCard}
+                onPress={() => setShowBubblesList(true)}
+              >
+                <Text style={styles.moreBubblesText}>+{userBubbles.length - 3} more</Text>
+              </Pressable>
+            )}
+          </View>
+
+          <Pressable 
+            style={styles.viewAllBubblesButton}
+            onPress={() => setShowBubblesList(true)}
+          >
+            <Text style={styles.viewAllBubblesText}>View All Bubbles</Text>
+          </Pressable>
         </View>
 
         {/* Earned Badges */}
@@ -236,23 +306,23 @@ export default function ProfileScreen() {
         <View style={styles.quickActions}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           
-          <Pressable style={styles.actionCard}>
+          <Pressable style={styles.actionCard} onPress={handleJoinNewBubble}>
             <View style={styles.actionIcon}>
-              <Share color="#10B981" size={20} />
+              <Plus color="#10B981" size={20} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Share Your Impact</Text>
-              <Text style={styles.actionSubtitle}>Show friends your progress</Text>
+              <Text style={styles.actionTitle}>Join Another Bubble</Text>
+              <Text style={styles.actionSubtitle}>Expand your environmental network</Text>
             </View>
           </Pressable>
 
           <Pressable style={styles.actionCard}>
             <View style={styles.actionIcon}>
-              <Users color="#3B82F6" size={20} />
+              <Share color="#3B82F6" size={20} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Create New Bubble</Text>
-              <Text style={styles.actionSubtitle}>Start a new environmental group</Text>
+              <Text style={styles.actionTitle}>Share Your Impact</Text>
+              <Text style={styles.actionSubtitle}>Show friends your progress</Text>
             </View>
           </Pressable>
         </View>
@@ -290,6 +360,54 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Bubbles List Modal */}
+      <Modal
+        visible={showBubblesList}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Your Bubbles</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowBubblesList(false)}
+            >
+              <X color="#6B7280" size={20} />
+            </Pressable>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            {userBubbles.map((userBubble) => (
+              <View key={userBubble.id} style={styles.bubbleListCard}>
+                <View style={styles.bubbleListIcon}>
+                  <Users color="#10B981" size={24} />
+                </View>
+                <View style={styles.bubbleListInfo}>
+                  <Text style={styles.bubbleListName}>
+                    Bubble {userBubble.bubbleId.slice(0, 8)}
+                  </Text>
+                  <Text style={styles.bubbleListStats}>
+                    {userBubble.points} points • {userBubble.co2Saved}kg CO₂ saved
+                  </Text>
+                  <Text style={styles.bubbleListDate}>
+                    Joined {userBubble.joinedAt.toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.bubbleListRole}>
+                  <Text style={styles.roleText}>{userBubble.role}</Text>
+                </View>
+              </View>
+            ))}
+
+            <Pressable style={styles.joinNewBubbleCard} onPress={handleJoinNewBubble}>
+              <Plus color="#10B981" size={24} />
+              <Text style={styles.joinNewBubbleText}>Join Another Bubble</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
+
       {/* Badge Detail Modal */}
       <Modal
         visible={selectedBadge !== null}
@@ -298,8 +416,8 @@ export default function ProfileScreen() {
       >
         {selectedBadge && (
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
+            <View style={styles.badgeModalContainer}>
+              <View style={styles.badgeModalHeader}>
                 <Text style={styles.modalBadgeIcon}>{selectedBadge.icon}</Text>
                 <Pressable
                   style={styles.closeButton}
@@ -436,10 +554,12 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 16,
   },
   statCard: {
     flex: 1,
+    minWidth: '45%',
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
@@ -471,7 +591,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
-  badgesSection: {
+  bubblesSection: {
     gap: 16,
   },
   sectionHeader: {
@@ -483,6 +603,71 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins-SemiBold',
     color: '#111827',
+  },
+  bubblesPreview: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bubblePreviewCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bubblePreviewIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  bubblePreviewText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  bubblePreviewPoints: {
+    fontSize: 10,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  moreBubblesCard: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreBubblesText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+  },
+  viewAllBubblesButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  viewAllBubblesText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
+  },
+  badgesSection: {
+    gap: 16,
   },
   badgesScroll: {
     paddingVertical: 8,
@@ -638,30 +823,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#9CA3AF',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
   modalContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    maxWidth: 320,
-    width: '100%',
+    flex: 1,
+    backgroundColor: '#F9FAFB',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    width: '100%',
-    marginBottom: 16,
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  modalBadgeIcon: {
-    fontSize: 48,
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
   },
   closeButton: {
     width: 32,
@@ -670,6 +850,107 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 24,
+  },
+  bubbleListCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bubbleListIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  bubbleListInfo: {
+    flex: 1,
+  },
+  bubbleListName: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  bubbleListStats: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  bubbleListDate: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
+  },
+  bubbleListRole: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  roleText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+    textTransform: 'capitalize',
+  },
+  joinNewBubbleCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 12,
+    borderWidth: 2,
+    borderColor: '#D1FAE5',
+    borderStyle: 'dashed',
+  },
+  joinNewBubbleText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  badgeModalContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    maxWidth: 320,
+    width: '100%',
+  },
+  badgeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 16,
+  },
+  modalBadgeIcon: {
+    fontSize: 48,
   },
   modalBadgeName: {
     fontSize: 24,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Users, Plus, ArrowRight } from 'lucide-react-native';
+import { Users, Plus, ArrowRight, Hash } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
@@ -10,9 +10,12 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(1);
   const [bubbleName, setBubbleName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user, updateUserData } = useAuth();
+  const { user, updateUserData, refreshUserBubbles } = useAuth();
+
+  const generateInviteCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
 
   const handleCreateBubble = async () => {
     if (!bubbleName.trim()) {
@@ -30,15 +33,17 @@ export default function OnboardingScreen() {
       const bubbleId = await SupabaseService.createBubble({
         name: bubbleName,
         description: `${bubbleName} - Making a green impact together`,
-        isPrivate,
-        inviteCode: isPrivate ? Math.random().toString(36).substring(2, 8).toUpperCase() : undefined,
+        inviteCode: generateInviteCode(),
         members: [user.id],
         totalPoints: 0,
         totalCO2Saved: 0,
         createdBy: user.id
       });
 
-      await updateUserData({ bubbleId });
+      // Join the bubble
+      await SupabaseService.joinBubble(bubbleId, user.id);
+      await refreshUserBubbles();
+      
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Error creating bubble:', error);
@@ -54,13 +59,32 @@ export default function OnboardingScreen() {
       return;
     }
 
+    if (!user) {
+      Alert.alert('Error', 'User not found');
+      return;
+    }
+
     setLoading(true);
     try {
-      // In a real app, you'd search for the bubble by invite code
-      // For now, we'll create a demo bubble join
-      Alert.alert('Feature Coming Soon', 'Joining bubbles by invite code will be available soon!');
+      const bubble = await SupabaseService.getBubbleByInviteCode(inviteCode.trim());
+      
+      if (!bubble) {
+        Alert.alert('Error', 'Invalid invite code. Please check and try again.');
+        return;
+      }
+
+      await SupabaseService.joinBubble(bubble.id, user.id);
+      await refreshUserBubbles();
+      
+      Alert.alert('Success!', `You've joined ${bubble.name}!`);
+      router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to join bubble. Please check the invite code.');
+      console.error('Error joining bubble:', error);
+      if (error.message.includes('already a member')) {
+        Alert.alert('Already a Member', 'You are already a member of this bubble.');
+      } else {
+        Alert.alert('Error', 'Failed to join bubble. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -78,7 +102,7 @@ export default function OnboardingScreen() {
           
           <Text style={styles.title}>Join Your First Bubble</Text>
           <Text style={styles.subtitle}>
-            Bubbles are small groups where you'll complete environmental challenges together
+            Bubbles are private groups where you'll complete environmental challenges together
           </Text>
           
           <View style={styles.buttonContainer}>
@@ -88,7 +112,7 @@ export default function OnboardingScreen() {
             </Pressable>
             
             <Pressable style={styles.secondaryButton} onPress={() => setStep(3)}>
-              <Users color="#ffffff" size={24} />
+              <Hash color="#ffffff" size={24} />
               <Text style={styles.secondaryButtonText}>Join with Invite Code</Text>
             </Pressable>
           </View>
@@ -115,30 +139,11 @@ export default function OnboardingScreen() {
               onChangeText={setBubbleName}
             />
             
-            <View style={styles.privacyContainer}>
-              <Pressable 
-                style={[styles.privacyOption, !isPrivate && styles.privacySelected]}
-                onPress={() => setIsPrivate(false)}
-              >
-                <Text style={[styles.privacyText, !isPrivate && styles.privacyTextSelected]}>
-                  Public
-                </Text>
-                <Text style={styles.privacyDescription}>
-                  Anyone can join
-                </Text>
-              </Pressable>
-              
-              <Pressable 
-                style={[styles.privacyOption, isPrivate && styles.privacySelected]}
-                onPress={() => setIsPrivate(true)}
-              >
-                <Text style={[styles.privacyText, isPrivate && styles.privacyTextSelected]}>
-                  Private
-                </Text>
-                <Text style={styles.privacyDescription}>
-                  Invite only
-                </Text>
-              </Pressable>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoTitle}>🔒 Private Bubble</Text>
+              <Text style={styles.infoText}>
+                Your bubble will be private and require an invite code to join. You'll get a unique code to share with friends.
+              </Text>
             </View>
             
             <Pressable 
@@ -168,12 +173,20 @@ export default function OnboardingScreen() {
         <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Invite code"
+            placeholder="Enter invite code"
             placeholderTextColor="#6B7280"
             value={inviteCode}
             onChangeText={setInviteCode}
             autoCapitalize="characters"
+            maxLength={6}
           />
+          
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>💡 Need an invite code?</Text>
+            <Text style={styles.infoText}>
+              Ask a friend who's already in a bubble to share their invite code with you.
+            </Text>
+          </View>
           
           <Pressable 
             style={[styles.createButton, loading && styles.disabledButton]}
@@ -275,35 +288,24 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     marginBottom: 24,
   },
-  privacyContainer: {
-    flexDirection: 'row',
-    gap: 12,
+  infoCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 32,
   },
-  privacyOption: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-  },
-  privacySelected: {
-    backgroundColor: '#ffffff',
-  },
-  privacyText: {
+  infoTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  privacyTextSelected: {
-    color: '#047857',
-  },
-  privacyDescription: {
+  infoText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#ffffff',
-    opacity: 0.8,
+    opacity: 0.9,
+    lineHeight: 20,
   },
   createButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',

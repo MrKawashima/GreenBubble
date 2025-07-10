@@ -1,5 +1,5 @@
 import { supabase } from '@/config/supabase';
-import { User, Bubble, Challenge, ChallengeCompletion } from '@/types';
+import { User, Bubble, Challenge, ChallengeCompletion, UserBubble } from '@/types';
 
 export const SupabaseService = {
   // Auth operations
@@ -66,6 +66,7 @@ export const SupabaseService = {
 
     return {
       ...data,
+      activeBubbleId: data.active_bubble_id,
       createdAt: new Date(data.created_at),
     } as User;
   },
@@ -75,7 +76,7 @@ export const SupabaseService = {
       .from('users')
       .update({
         name: updates.name,
-        bubble_id: updates.bubbleId,
+        active_bubble_id: updates.activeBubbleId,
         points: updates.points,
         level: updates.level,
         badges: updates.badges,
@@ -93,7 +94,6 @@ export const SupabaseService = {
       .insert({
         name: bubbleData.name,
         description: bubbleData.description,
-        is_private: bubbleData.isPrivate,
         invite_code: bubbleData.inviteCode,
         members: bubbleData.members,
         total_points: bubbleData.totalPoints,
@@ -123,7 +123,6 @@ export const SupabaseService = {
       id: data.id,
       name: data.name,
       description: data.description,
-      isPrivate: data.is_private,
       inviteCode: data.invite_code,
       members: data.members,
       totalPoints: data.total_points,
@@ -133,12 +132,81 @@ export const SupabaseService = {
     } as Bubble;
   },
 
+  async getBubbleByInviteCode(inviteCode: string): Promise<Bubble | null> {
+    const { data, error } = await supabase
+      .from('bubbles')
+      .select('*')
+      .eq('invite_code', inviteCode.toUpperCase())
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      inviteCode: data.invite_code,
+      members: data.members,
+      totalPoints: data.total_points,
+      totalCO2Saved: data.total_co2_saved,
+      createdBy: data.created_by,
+      createdAt: new Date(data.created_at),
+    } as Bubble;
+  },
+
+  async getUserBubbles(userId: string): Promise<UserBubble[]> {
+    const { data, error } = await supabase
+      .from('user_bubbles')
+      .select('*')
+      .eq('user_id', userId)
+      .order('joined_at', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      bubbleId: item.bubble_id,
+      joinedAt: new Date(item.joined_at),
+      role: item.role,
+      points: item.points,
+      co2Saved: item.co2_saved,
+    })) as UserBubble[];
+  },
+
   async joinBubble(bubbleId: string, userId: string) {
-    // First get the current bubble
+    // First check if user is already a member
+    const { data: existingMembership } = await supabase
+      .from('user_bubbles')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('bubble_id', bubbleId)
+      .single();
+
+    if (existingMembership) {
+      throw new Error('You are already a member of this bubble');
+    }
+
+    // Add user to user_bubbles table
+    const { error: membershipError } = await supabase
+      .from('user_bubbles')
+      .insert({
+        user_id: userId,
+        bubble_id: bubbleId,
+        role: 'member',
+        points: 0,
+        co2_saved: 0,
+      });
+
+    if (membershipError) throw membershipError;
+
+    // Update bubble members array
     const bubble = await this.getBubble(bubbleId);
     if (!bubble) throw new Error('Bubble not found');
 
-    // Add user to members array if not already there
     if (!bubble.members.includes(userId)) {
       const { error } = await supabase
         .from('bubbles')
@@ -148,10 +216,49 @@ export const SupabaseService = {
         .eq('id', bubbleId);
 
       if (error) throw error;
-
-      // Update user's bubble_id
-      await this.updateUser(userId, { bubbleId });
     }
+
+    // Set as active bubble if user doesn't have one
+    const user = await this.getUser(userId);
+    if (user && !user.activeBubbleId) {
+      await this.updateUser(userId, { activeBubbleId: bubbleId });
+    }
+  },
+
+  async leaveBubble(bubbleId: string, userId: string) {
+    // Remove from user_bubbles
+    const { error: membershipError } = await supabase
+      .from('user_bubbles')
+      .delete()
+      .eq('user_id', userId)
+      .eq('bubble_id', bubbleId);
+
+    if (membershipError) throw membershipError;
+
+    // Update bubble members array
+    const bubble = await this.getBubble(bubbleId);
+    if (bubble) {
+      const { error } = await supabase
+        .from('bubbles')
+        .update({
+          members: bubble.members.filter(id => id !== userId)
+        })
+        .eq('id', bubbleId);
+
+      if (error) throw error;
+    }
+
+    // If this was the active bubble, switch to another one or clear it
+    const user = await this.getUser(userId);
+    if (user && user.activeBubbleId === bubbleId) {
+      const userBubbles = await this.getUserBubbles(userId);
+      const newActiveBubbleId = userBubbles.length > 0 ? userBubbles[0].bubbleId : undefined;
+      await this.updateUser(userId, { activeBubbleId: newActiveBubbleId });
+    }
+  },
+
+  async switchActiveBubble(userId: string, bubbleId: string) {
+    await this.updateUser(userId, { activeBubbleId: bubbleId });
   },
 
   // Challenge operations
@@ -208,6 +315,33 @@ export const SupabaseService = {
       .eq('bubble_id', bubbleId)
       .eq('challenge_id', challengeId)
       .order('completed_at', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      challengeId: item.challenge_id,
+      bubbleId: item.bubble_id,
+      completedAt: new Date(item.completed_at),
+      photo: item.photo,
+      comment: item.comment,
+      points: item.points,
+      co2Saved: item.co2_saved,
+    })) as ChallengeCompletion[];
+  },
+
+  async getUserChallengeHistory(userId: string, bubbleId?: string): Promise<ChallengeCompletion[]> {
+    let query = supabase
+      .from('challenge_completions')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (bubbleId) {
+      query = query.eq('bubble_id', bubbleId);
+    }
+
+    const { data, error } = await query.order('completed_at', { ascending: false });
 
     if (error) throw error;
 
