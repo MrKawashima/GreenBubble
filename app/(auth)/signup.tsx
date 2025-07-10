@@ -1,25 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupScreen() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -29,81 +16,48 @@ export default function SignupScreen() {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Name is required';
-    else if (formData.name.trim().length < 2)
-      newErrors.name = 'Name must be at least 2 characters';
-
+    else if (formData.name.trim().length < 2) newErrors.name = 'Name must be at least 2 characters';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = 'Please enter a valid email';
-
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Enter a valid email';
     if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6)
-      newErrors.password = 'Password must be at least 6 characters';
-    else if (!/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password))
-      newErrors.password =
-        'Password must contain both uppercase and lowercase letters';
-
-    if (!formData.confirmPassword)
-      newErrors.confirmPassword = 'Please confirm your password';
-    else if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = 'Passwords do not match';
-
+    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    else if (!/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password)) newErrors.password = 'Password must include upper and lowercase letters';
+    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSignup = async () => {
     if (!validateForm()) return;
-
     try {
       setErrors({});
       await signUp(formData.email, formData.password, formData.name);
       router.replace('/(auth)/onboarding');
     } catch (error) {
       let errorMessage = 'An unexpected error occurred';
-      if (error.message?.includes('User already registered')) {
-        errorMessage = 'An account with this email already exists';
-      } else if (
-        error.message?.includes('Password should be at least 6 characters')
-      ) {
-        errorMessage = 'Password must be at least 6 characters long';
-      } else if (error.message?.includes('Invalid email')) {
-        errorMessage = 'Please enter a valid email address';
-      }
-
-      setErrors({ general: errorMessage });
+      if (error.message?.includes('User already registered')) errorMessage = 'Email already in use';
+      else if (error.message?.includes('Password')) errorMessage = 'Password too short';
+      else if (error.message?.includes('Invalid email')) errorMessage = 'Invalid email format';
       Alert.alert('Signup Failed', errorMessage);
+      setErrors({ general: errorMessage });
       scrollViewRef?.scrollTo({ y: 0, animated: true });
     }
   };
 
-  const updateFormData = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
-  };
-
-  const getPasswordStrength = () => {
-    const password = formData.password;
-    if (!password) return { strength: 0, label: '', color: '#E5E7EB' };
-
-    let strength = 0;
-    if (password.length >= 6) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
-
+  const passwordStrength = (() => {
+    const p = formData.password;
+    if (!p) return { strength: 0, label: '', color: '#E5E7EB' };
+    let s = 0;
+    if (p.length >= 6) s++;
+    if (/[a-z]/.test(p)) s++;
+    if (/[A-Z]/.test(p)) s++;
+    if (/[0-9]/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
     const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
     const colors = ['#EF4444', '#F59E0B', '#F59E0B', '#10B981', '#059669'];
-
-    return {
-      strength: (strength / 5) * 100,
-      label: labels[strength - 1] || '',
-      color: colors[strength - 1] || '#E5E7EB',
-    };
-  };
-
-  const passwordStrength = getPasswordStrength();
+    return { strength: (s / 5) * 100, label: labels[s - 1] || '', color: colors[s - 1] || '#E5E7EB' };
+  })();
 
   return (
     <LinearGradient colors={['#10B981', '#059669']} style={styles.container}>
@@ -112,204 +66,116 @@ export default function SignupScreen() {
           <Ionicons name="arrow-back" color="#ffffff" size={24} />
         </Pressable>
         <Text style={styles.title}>Join GreenBubble</Text>
-        <Text style={styles.subtitle}>
-          Create your account and start making an impact
-        </Text>
+        <Text style={styles.subtitle}>Create your account and start making an impact</Text>
       </View>
 
-      <ScrollView
-        ref={setScrollViewRef}
-        style={styles.form}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView ref={setScrollViewRef} style={styles.form} showsVerticalScrollIndicator={false}>
         {errors.general && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{errors.general}</Text>
           </View>
         )}
 
-        {/* Full Name */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Full Name</Text>
           <View style={[styles.inputContainer, errors.name && styles.inputError]}>
-            <Ionicons
-              name="person"
-              color={errors.name ? '#EF4444' : '#10B981'}
-              size={20}
-            />
+            <Ionicons name="person" color={errors.name ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Enter your full name"
               placeholderTextColor="#9CA3AF"
               value={formData.name}
-              onChangeText={text => updateFormData('name', text)}
-              autoComplete="name"
+              onChangeText={(t) => setFormData(p => ({ ...p, name: t }))}
             />
           </View>
           {errors.name && <Text style={styles.fieldError}>{errors.name}</Text>}
         </View>
 
-        {/* Email */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Email</Text>
           <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-            <Ionicons
-              name="mail"
-              color={errors.email ? '#EF4444' : '#10B981'}
-              size={20}
-            />
+            <Ionicons name="mail" color={errors.email ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
               placeholderTextColor="#9CA3AF"
               value={formData.email}
-              onChangeText={text => updateFormData('email', text)}
+              onChangeText={(t) => setFormData(p => ({ ...p, email: t }))}
               keyboardType="email-address"
               autoCapitalize="none"
-              autoComplete="email"
             />
           </View>
           {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
         </View>
 
-        {/* Password */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Password</Text>
           <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-            <Ionicons
-              name="lock-closed"
-              color={errors.password ? '#EF4444' : '#10B981'}
-              size={20}
-            />
+            <Ionicons name="lock-closed" color={errors.password ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Create a password"
               placeholderTextColor="#9CA3AF"
               value={formData.password}
-              onChangeText={text => updateFormData('password', text)}
+              onChangeText={(t) => setFormData(p => ({ ...p, password: t }))}
               secureTextEntry={!showPassword}
-              autoComplete="new-password"
             />
-            <Pressable
-              style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-off' : 'eye'}
-                color="#6B7280"
-                size={20}
-              />
+            <Pressable style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} color="#6B7280" size={20} />
             </Pressable>
           </View>
-          {formData.password && (
-            <View style={styles.passwordStrength}>
-              <View style={styles.strengthBar}>
-                <View
-                  style={[
-                    styles.strengthFill,
-                    {
-                      width: `${passwordStrength.strength}%`,
-                      backgroundColor: passwordStrength.color,
-                    },
-                  ]}
-                />
-              </View>
-              {passwordStrength.label && (
-                <Text
-                  style={[
-                    styles.strengthLabel,
-                    { color: passwordStrength.color },
-                  ]}
-                >
-                  {passwordStrength.label}
-                </Text>
-              )}
+          <View style={styles.passwordStrength}>
+            <View style={styles.strengthBar}>
+              <View style={[styles.strengthFill, { width: `${passwordStrength.strength}%`, backgroundColor: passwordStrength.color }]} />
             </View>
-          )}
+            {passwordStrength.label && <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>{passwordStrength.label}</Text>}
+          </View>
           {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
         </View>
 
-        {/* Confirm Password */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Confirm Password</Text>
-          <View
-            style={[
-              styles.inputContainer,
-              errors.confirmPassword && styles.inputError,
-            ]}
-          >
-            <Ionicons
-              name="lock-closed"
-              color={errors.confirmPassword ? '#EF4444' : '#10B981'}
-              size={20}
-            />
+          <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
+            <Ionicons name="lock-closed" color={errors.confirmPassword ? '#EF4444' : '#10B981'} size={20} />
             <TextInput
               style={styles.input}
               placeholder="Confirm your password"
               placeholderTextColor="#9CA3AF"
               value={formData.confirmPassword}
-              onChangeText={text => updateFormData('confirmPassword', text)}
+              onChangeText={(t) => setFormData(p => ({ ...p, confirmPassword: t }))}
               secureTextEntry={!showConfirmPassword}
-              autoComplete="new-password"
             />
-            <Pressable
-              style={styles.eyeButton}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Ionicons
-                name={showConfirmPassword ? 'eye-off' : 'eye'}
-                color="#6B7280"
-                size={20}
-              />
+            <Pressable style={styles.eyeButton} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} color="#6B7280" size={20} />
             </Pressable>
           </View>
-          {formData.confirmPassword &&
-            formData.password === formData.confirmPassword && (
-              <View style={styles.matchIndicator}>
-                <Ionicons name="checkmark-circle" color="#10B981" size={16} />
-                <Text style={styles.matchText}>Passwords match</Text>
-              </View>
-            )}
-          {errors.confirmPassword && (
-            <Text style={styles.fieldError}>{errors.confirmPassword}</Text>
+          {formData.confirmPassword && formData.password === formData.confirmPassword && (
+            <View style={styles.matchIndicator}>
+              <Ionicons name="checkmark-circle" color="#10B981" size={16} />
+              <Text style={styles.matchText}>Passwords match</Text>
+            </View>
           )}
+          {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword}</Text>}
         </View>
 
-        {/* Terms */}
-        <View style={styles.termsContainer}>
-          <Text style={styles.termsText}>
-            By creating an account, you agree to our{' '}
-            <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-            <Text style={styles.termsLink}>Privacy Policy</Text>
-          </Text>
-        </View>
+        <Text style={styles.termsText}>
+          By creating an account, you agree to our <Text style={styles.termsLink}>Terms</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>.
+        </Text>
 
-        {/* Submit */}
-        <Pressable
-          style={[styles.signupButton, loading && styles.disabledButton]}
-          onPress={handleSignup}
-          disabled={loading}
-        >
-          <Text style={styles.signupButtonText}>
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </Text>
+        <Pressable style={[styles.signupButton, loading && styles.disabledButton]} onPress={handleSignup} disabled={loading}>
+          <Text style={styles.signupButtonText}>{loading ? 'Creating Account...' : 'Create Account'}</Text>
         </Pressable>
 
-        {/* ✅ FIXED TEXT BLOCK FOR WEB */}
         <View style={styles.linkContainer}>
           <Text style={styles.linkQuestion}>Already have an account?</Text>
           <Pressable onPress={() => router.push('/(auth)/login')}>
             <Text style={styles.linkText}>Sign in</Text>
           </Pressable>
         </View>
-
-
-        <View style={styles.bottomSpacing} />
       </ScrollView>
     </LinearGradient>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
