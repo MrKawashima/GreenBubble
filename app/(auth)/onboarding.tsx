@@ -23,8 +23,10 @@ export default function OnboardingScreen() {
       return;
     }
 
-    if (!user) {
-      Alert.alert('Error', 'User not found');
+    // Get current user from Supabase auth
+    const currentUser = await SupabaseService.getCurrentUser();
+    if (!currentUser) {
+      Alert.alert('Error', 'Please log in again');
       return;
     }
 
@@ -34,14 +36,14 @@ export default function OnboardingScreen() {
         name: bubbleName,
         description: `${bubbleName} - Making a green impact together`,
         inviteCode: generateInviteCode(),
-        members: [user.id],
+        members: [currentUser.id],
         totalPoints: 0,
         totalCO2Saved: 0,
-        createdBy: user.id
+        createdBy: currentUser.id
       });
 
       // Join the bubble
-      await SupabaseService.joinBubble(bubbleId, user.id);
+      await SupabaseService.joinBubble(bubbleId, currentUser.id);
       await refreshUserBubbles();
       
       router.replace('/(tabs)');
@@ -59,8 +61,10 @@ export default function OnboardingScreen() {
       return;
     }
 
-    if (!user) {
-      Alert.alert('Error', 'User not found');
+    // Get current user from Supabase auth
+    const currentUser = await SupabaseService.getCurrentUser();
+    if (!currentUser) {
+      Alert.alert('Error', 'Please log in again');
       return;
     }
 
@@ -73,7 +77,7 @@ export default function OnboardingScreen() {
         return;
       }
 
-      await SupabaseService.joinBubble(bubble.id, user.id);
+      await SupabaseService.joinBubble(bubble.id, currentUser.id);
       await refreshUserBubbles();
       
       Alert.alert('Success!', `You've joined ${bubble.name}!`);
