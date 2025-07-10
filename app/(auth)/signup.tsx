@@ -255,3 +255,31 @@ export default function SignupScreen() {
             <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
             <Text style={styles.termsLink}>Privacy Policy</Text>
           </Text>
+        </View>
+
+        <Pressable 
+          style={[styles.signupButton, loading && styles.disabledButton]}
+          onPress={handleSignup}
+          disabled={loading}
+        >
+          <Text style={styles.signupButtonText}>
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </Text>
+        </Pressable>
+
+        <View style={styles.linkContainer}>
+          <Text style={styles.linkQuestion}>Already have an account? </Text>
+          <Pressable onPress={() => router.push('/(auth)/login')}>
+            <Text style={styles.linkText}>Sign in</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </LinearGradient>
+  );
+}
+
+const styles = StyleSheet.create({
+  // ...your existing styles here
+});
