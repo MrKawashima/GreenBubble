@@ -152,7 +152,7 @@ export default function SignupScreen() {
             />
           </View>
           {/* Only render the error message if it exists */}
-          {errors.name && <Text style={styles.fieldError}>{errors.name}</Text>}
+          {errors.name && <Text style={styles.fieldError}>{errors.name || ''}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -171,7 +171,7 @@ export default function SignupScreen() {
             />
           </View>
           {/* Only render the error message if it exists */}
-          {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
+          {errors.email && <Text style={styles.fieldError}>{errors.email || ''}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -217,7 +217,7 @@ export default function SignupScreen() {
               </Text>}
             </View>
           )}
-          {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
+          {errors.password && <Text style={styles.fieldError}>{errors.password || ''}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -250,7 +250,7 @@ export default function SignupScreen() {
               <Text style={styles.matchText}>Passwords match</Text>
             </View>
           )}
-          {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword}</Text>}
+          {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword || ''}</Text>}
         </View>
 
         <View style={styles.termsContainer}>
