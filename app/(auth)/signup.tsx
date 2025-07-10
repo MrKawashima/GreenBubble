@@ -297,13 +297,12 @@ export default function SignupScreen() {
 
         {/* ✅ FIXED TEXT BLOCK FOR WEB */}
         <View style={styles.linkContainer}>
-          <Text style={styles.linkQuestion}>
-            Already have an account?{' '}
-            <Text style={styles.linkText} onPress={() => router.push('/(auth)/login')}>
-              Sign in
-            </Text>
-          </Text>
+          <Text style={styles.linkQuestion}>Already have an account?</Text>
+          <Pressable onPress={() => router.push('/(auth)/login')}>
+            <Text style={styles.linkText}>Sign in</Text>
+          </Pressable>
         </View>
+
 
         <View style={styles.bottomSpacing} />
       </ScrollView>
