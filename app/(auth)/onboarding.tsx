@@ -23,15 +23,23 @@ export default function OnboardingScreen() {
       return;
     }
 
-    // Get current user from Supabase auth
-    const currentUser = await SupabaseService.getCurrentUser();
-    if (!currentUser) {
-      Alert.alert('Error', 'Please log in again');
-      return;
-    }
-
     setLoading(true);
     try {
+      // Get current user from Supabase auth
+      const currentUser = await SupabaseService.getCurrentUser();
+      if (!currentUser) {
+        Alert.alert('Error', 'Please log in again');
+        return;
+      }
+
+      // Ensure user profile exists in database
+      let userData = await SupabaseService.getUser(currentUser.id);
+      if (!userData) {
+        // Create user profile if it doesn't exist
+        await SupabaseService.createUserProfile(currentUser.id, currentUser.email || '', user?.name || 'User');
+        userData = await SupabaseService.getUser(currentUser.id);
+      }
+
       const bubbleId = await SupabaseService.createBubble({
         name: bubbleName,
         description: `${bubbleName} - Making a green impact together`,
@@ -61,15 +69,23 @@ export default function OnboardingScreen() {
       return;
     }
 
-    // Get current user from Supabase auth
-    const currentUser = await SupabaseService.getCurrentUser();
-    if (!currentUser) {
-      Alert.alert('Error', 'Please log in again');
-      return;
-    }
-
     setLoading(true);
     try {
+      // Get current user from Supabase auth
+      const currentUser = await SupabaseService.getCurrentUser();
+      if (!currentUser) {
+        Alert.alert('Error', 'Please log in again');
+        return;
+      }
+
+      // Ensure user profile exists in database
+      let userData = await SupabaseService.getUser(currentUser.id);
+      if (!userData) {
+        // Create user profile if it doesn't exist
+        await SupabaseService.createUserProfile(currentUser.id, currentUser.email || '', user?.name || 'User');
+        userData = await SupabaseService.getUser(currentUser.id);
+      }
+
       const bubble = await SupabaseService.getBubbleByInviteCode(inviteCode.trim());
       
       if (!bubble) {
