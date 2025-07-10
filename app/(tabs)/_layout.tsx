@@ -35,7 +35,7 @@ export default function TabLayout() {
         options={{
           title: 'Challenges',
           tabBarIcon: ({ size, color }) => (
-            <Ionicons name="target" size={size} color={color} />
+            <Ionicons name="sword-cross" size={size} color={color} />
           ),
         }}
       />
