@@ -57,8 +57,7 @@ export default function WelcomeScreen() {
 // A reusable Feature component to avoid redundancy
 const Feature = ({ icon, text }) => (
   <View style={styles.feature}>
-    {icon}
-    <Text style={styles.featureText}>{text}</Text>
+    {icon}<Text style={styles.featureText}>{text}</Text>
   </View>
 );
 
