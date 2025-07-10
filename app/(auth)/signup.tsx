@@ -266,6 +266,7 @@ const styles = StyleSheet.create({
   disabledButton: { opacity: 0.6, shadowOpacity: 0.1 },
   signupButtonText: { fontSize: 18, fontFamily: 'Inter-SemiBold', color: '#fff' },
   linkContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
