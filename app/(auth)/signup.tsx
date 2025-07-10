@@ -133,7 +133,6 @@ export default function SignupScreen() {
       <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
         {errors.general && (
           <View style={styles.errorContainer}>
-            {/* Only render if there's a valid error message */}
             <Text style={styles.errorText}>{errors.general}</Text>
           </View>
         )}
@@ -151,7 +150,6 @@ export default function SignupScreen() {
               autoComplete="name"
             />
           </View>
-          {/* Only render the error message if it exists */}
           {errors.name && <Text style={styles.fieldError}>{errors.name}</Text>}
         </View>
 
@@ -170,7 +168,6 @@ export default function SignupScreen() {
               autoComplete="email"
             />
           </View>
-          {/* Only render the error message if it exists */}
           {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
         </View>
 
@@ -211,10 +208,11 @@ export default function SignupScreen() {
                   ]} 
                 />
               </View>
-              {/* Only render the label if there's one */}
-              {passwordStrength.label && <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+            {passwordStrength.label && (
+              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
                 {passwordStrength.label}
-              </Text>}
+              </Text>
+            )}
             </View>
           )}
           {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
@@ -255,9 +253,7 @@ export default function SignupScreen() {
 
         <View style={styles.termsContainer}>
           <Text style={styles.termsText}>
-            By creating an account, you agree to our 
-            <Text style={styles.termsLink}> Terms of Service </Text> 
-            and <Text style={styles.termsLink}> Privacy Policy </Text>
+            By creating an account, you agree to our<Text style={styles.termsLink}> Terms of Service</Text> and<Text style={styles.termsLink}> Privacy Policy</Text>
           </Text>
         </View>
 
