@@ -36,6 +36,7 @@ export default function TabLayout() {
           title: 'Challenges',
           tabBarIcon: ({ size, color }) => (
             <Ionicons name="sword-cross" size={size} color={color} />
+            <MaterialCommunityIcons name="sword-cross" size={24} color="black" />
           ),
         }}
       />
