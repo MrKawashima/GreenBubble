@@ -237,7 +237,7 @@ export default function HomeScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubbleSelector(false)}
             >
-              <Ionicons name="close" color="#6B7280" size={24} />
+              <Ionicons name="checkmark-circle" color="#ffffff" size={20} />
             </Pressable>
           </View>
 
