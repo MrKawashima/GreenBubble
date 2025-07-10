@@ -254,8 +254,6 @@ export default function HistoryScreen() {
                       <Text style={styles.bubbleText}>{item.bubbleName}</Text>
                     </View>
                   )}
-                </View>
-              </View>
               
               {item.photo && (
                 <Image source={{ uri: item.photo }} style={styles.thumbnailImage} />
