@@ -39,7 +39,8 @@ export default function WelcomeScreen() {
             onPress={() => router.push('/(auth)/signup')}
           >
             <Text style={styles.primaryButtonText}>Get Started</Text>
-          </Pressable><Pressable 
+          </Pressable>
+          <Pressable 
             style={styles.secondaryButton}
             onPress={() => router.push('/(auth)/login')}
           >
