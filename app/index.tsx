@@ -18,7 +18,7 @@ export default function IndexScreen() {
           router.replace('/(auth)/welcome');
         }
       }
-    }, 500); // Slightly longer delay to show splash screen
+    }, 5000); // Slightly longer delay to show splash screen
 
     return () => clearTimeout(timer);
   }, [session, authLoading]);
