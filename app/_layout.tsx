@@ -13,16 +13,6 @@ SplashScreen.preventAutoHideAsync();
 function RootLayoutContent() {
   const { authLoading } = useAuth();
 
-  useEffect(() => {
-    if (!authLoading) {
-      SplashScreen.hideAsync();
-    }
-  }, [authLoading]);
-
-  if (authLoading) {
-    return null;
-  }
-
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -46,6 +36,12 @@ export default function RootLayout() {
     'Poppins-SemiBold': Poppins_600SemiBold,
     'Poppins-Bold': Poppins_700Bold,
   });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
