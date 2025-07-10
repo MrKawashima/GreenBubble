@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
             <Text style={styles.featureText}>Create or join Bubbles</Text>
           </View>
           <View style={styles.feature}>
-            <Ionicons name="target" color="#ffffff" size={24} />
+            <Ionicons name="leaf" color="#ffffff" size={24} />
             <Text style={styles.featureText}>Complete weekly challenges</Text>
           </View>
           <View style={styles.feature}>
