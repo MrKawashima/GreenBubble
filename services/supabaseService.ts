@@ -296,7 +296,12 @@ export const SupabaseService = {
   },
 
   async switchActiveBubble(userId: string, bubbleId: string) {
-    await this.updateUser(userId, { activeBubbleId: bubbleId });
+    const { error } = await supabase
+      .from('users')
+      .update({ bubble_id: bubbleId })
+      .eq('id', userId);
+
+    if (error) throw error;
   },
 
   // Challenge operations
