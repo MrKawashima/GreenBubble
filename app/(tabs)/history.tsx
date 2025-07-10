@@ -341,6 +341,7 @@ export default function HistoryScreen() {
                   <Text style={styles.filterOptionText}>
                     Bubble {userBubble.bubbleId.slice(0, 8)}
                   </Text>
+                </View>
                 {selectedBubbleFilter === userBubble.bubbleId && (
                   <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 )}
