@@ -28,7 +28,6 @@ export default function SignupScreen() {
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     else if (formData.name.trim().length < 2)
       newErrors.name = 'Name must be at least 2 characters';
@@ -296,7 +295,7 @@ export default function SignupScreen() {
           </Text>
         </Pressable>
 
-        {/* ✅ FIXED: Web-compatible text/link */}
+        {/* ✅ FIXED TEXT BLOCK FOR WEB */}
         <View style={styles.linkContainer}>
           <Text style={styles.linkQuestion}>
             Already have an account?{' '}
@@ -367,10 +366,25 @@ const styles = StyleSheet.create({
   strengthBar: { height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden', marginBottom: 4 },
   strengthFill: { height: '100%', borderRadius: 2 },
   strengthLabel: { fontSize: 12, fontFamily: 'Inter-SemiBold' },
-  matchIndicator: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
-  matchText: { fontSize: 14, fontFamily: 'Inter-Regular', color: '#10B981' },
+  matchIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  matchText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#10B981',
+    marginLeft: 4, // fixed: no 'gap'
+  },
   termsContainer: { marginBottom: 32 },
-  termsText: { fontSize: 14, fontFamily: 'Inter-Regular', color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  termsText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
   termsLink: { color: '#10B981', fontFamily: 'Inter-SemiBold' },
   signupButton: {
     backgroundColor: '#10B981',
@@ -386,8 +400,22 @@ const styles = StyleSheet.create({
   },
   disabledButton: { opacity: 0.6, shadowOpacity: 0.1 },
   signupButtonText: { fontSize: 18, fontFamily: 'Inter-SemiBold', color: '#fff' },
-  linkContainer: { justifyContent: 'center', alignItems: 'center', marginBottom: 20, paddingHorizontal: 16 },
-  linkQuestion: { fontSize: 16, fontFamily: 'Inter-Regular', color: '#6B7280', textAlign: 'center' },
-  linkText: { color: '#10B981', fontFamily: 'Inter-SemiBold', textDecorationLine: 'underline' },
+  linkContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+  },
+  linkQuestion: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  linkText: {
+    color: '#10B981',
+    fontFamily: 'Inter-SemiBold',
+    textDecorationLine: 'underline',
+  },
   bottomSpacing: { height: 40 },
 });
