@@ -27,12 +27,10 @@ export default function WelcomeScreen() {
             <Users color="#ffffff" size={24} />
             <Text style={styles.featureText}>Create or join Bubbles</Text>
           </View>
-          
           <View style={styles.feature}>
             <Target color="#ffffff" size={24} />
             <Text style={styles.featureText}>Complete weekly challenges</Text>
           </View>
-          
           <View style={styles.feature}>
             <Leaf color="#ffffff" size={24} />
             <Text style={styles.featureText}>Track your CO2 impact</Text>
