@@ -68,10 +68,7 @@ export default function OnboardingScreen() {
 
   if (step === 1) {
     return (
-      <LinearGradient 
-        colors={['#10B981', '#059669']} 
-        style={styles.container}
-      >
+      <LinearGradient colors={['#10B981', '#059669']} style={styles.container}>
         <View style={styles.content}>
           <View style={styles.iconContainer}>
             <View style={styles.bubble}>
@@ -85,18 +82,12 @@ export default function OnboardingScreen() {
           </Text>
           
           <View style={styles.buttonContainer}>
-            <Pressable 
-              style={styles.primaryButton}
-              onPress={() => setStep(2)}
-            >
+            <Pressable style={styles.primaryButton} onPress={() => setStep(2)}>
               <Plus color="#047857" size={24} />
               <Text style={styles.primaryButtonText}>Create a New Bubble</Text>
             </Pressable>
             
-            <Pressable 
-              style={styles.secondaryButton}
-              onPress={() => setStep(3)}
-            >
+            <Pressable style={styles.secondaryButton} onPress={() => setStep(3)}>
               <Users color="#ffffff" size={24} />
               <Text style={styles.secondaryButtonText}>Join with Invite Code</Text>
             </Pressable>
@@ -108,10 +99,7 @@ export default function OnboardingScreen() {
 
   if (step === 2) {
     return (
-      <LinearGradient 
-        colors={['#10B981', '#059669']} 
-        style={styles.container}
-      >
+      <LinearGradient colors={['#10B981', '#059669']} style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.title}>Create Your Bubble</Text>
           <Text style={styles.subtitle}>
@@ -170,10 +158,7 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <LinearGradient 
-      colors={['#10B981', '#059669']} 
-      style={styles.container}
-    >
+    <LinearGradient colors={['#10B981', '#059669']} style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Join a Bubble</Text>
         <Text style={styles.subtitle}>
