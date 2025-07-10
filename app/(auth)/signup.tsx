@@ -159,7 +159,7 @@ export default function SignupScreen() {
         </View>
 
         <Text style={styles.termsText}>
-          By creating an account, you agree to our <Text style={styles.termsLink}>Terms</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>.
+          By creating an account, you agree to our <Text style={styles.termsLink}>Terms</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>
         </Text>
 
         <Pressable style={[styles.signupButton, loading && styles.disabledButton]} onPress={handleSignup} disabled={loading}>
