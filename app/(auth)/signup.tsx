@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -22,17 +30,22 @@ export default function SignupScreen() {
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = 'Name is required';
-    else if (formData.name.trim().length < 2) newErrors.name = 'Name must be at least 2 characters';
+    else if (formData.name.trim().length < 2)
+      newErrors.name = 'Name must be at least 2 characters';
 
     if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Please enter a valid email';
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = 'Please enter a valid email';
 
     if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    else if (formData.password.length < 6)
+      newErrors.password = 'Password must be at least 6 characters';
     else if (!/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password))
-      newErrors.password = 'Password must contain both uppercase and lowercase letters';
+      newErrors.password =
+        'Password must contain both uppercase and lowercase letters';
 
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = 'Please confirm your password';
     else if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Passwords do not match';
 
@@ -49,12 +62,15 @@ export default function SignupScreen() {
       router.replace('/(auth)/onboarding');
     } catch (error) {
       let errorMessage = 'An unexpected error occurred';
-      if (error.message?.includes('User already registered'))
+      if (error.message?.includes('User already registered')) {
         errorMessage = 'An account with this email already exists';
-      else if (error.message?.includes('Password should be at least 6 characters'))
+      } else if (
+        error.message?.includes('Password should be at least 6 characters')
+      ) {
         errorMessage = 'Password must be at least 6 characters long';
-      else if (error.message?.includes('Invalid email'))
+      } else if (error.message?.includes('Invalid email')) {
         errorMessage = 'Please enter a valid email address';
+      }
 
       setErrors({ general: errorMessage });
       Alert.alert('Signup Failed', errorMessage);
@@ -84,7 +100,7 @@ export default function SignupScreen() {
     return {
       strength: (strength / 5) * 100,
       label: labels[strength - 1] || '',
-      color: colors[strength - 1] || '#E5E7EB'
+      color: colors[strength - 1] || '#E5E7EB',
     };
   };
 
@@ -97,21 +113,31 @@ export default function SignupScreen() {
           <Ionicons name="arrow-back" color="#ffffff" size={24} />
         </Pressable>
         <Text style={styles.title}>Join GreenBubble</Text>
-        <Text style={styles.subtitle}>Create your account and start making an impact</Text>
+        <Text style={styles.subtitle}>
+          Create your account and start making an impact
+        </Text>
       </View>
 
-      <ScrollView ref={setScrollViewRef} style={styles.form} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={setScrollViewRef}
+        style={styles.form}
+        showsVerticalScrollIndicator={false}
+      >
         {errors.general && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{errors.general}</Text>
           </View>
         )}
 
-        {/* Name */}
+        {/* Full Name */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Full Name</Text>
           <View style={[styles.inputContainer, errors.name && styles.inputError]}>
-            <Ionicons name="person" color={errors.name ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons
+              name="person"
+              color={errors.name ? '#EF4444' : '#10B981'}
+              size={20}
+            />
             <TextInput
               style={styles.input}
               placeholder="Enter your full name"
@@ -128,7 +154,11 @@ export default function SignupScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Email</Text>
           <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-            <Ionicons name="mail" color={errors.email ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons
+              name="mail"
+              color={errors.email ? '#EF4444' : '#10B981'}
+              size={20}
+            />
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
@@ -147,7 +177,11 @@ export default function SignupScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Password</Text>
           <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-            <Ionicons name="lock-closed" color={errors.password ? '#EF4444' : '#10B981'} size={20} />
+            <Ionicons
+              name="lock-closed"
+              color={errors.password ? '#EF4444' : '#10B981'}
+              size={20}
+            />
             <TextInput
               style={styles.input}
               placeholder="Create a password"
@@ -157,8 +191,15 @@ export default function SignupScreen() {
               secureTextEntry={!showPassword}
               autoComplete="new-password"
             />
-            <Pressable style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? 'eye-off' : 'eye'} color="#6B7280" size={20} />
+            <Pressable
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                color="#6B7280"
+                size={20}
+              />
             </Pressable>
           </View>
           {formData.password && (
@@ -167,12 +208,20 @@ export default function SignupScreen() {
                 <View
                   style={[
                     styles.strengthFill,
-                    { width: `${passwordStrength.strength}%`, backgroundColor: passwordStrength.color }
+                    {
+                      width: `${passwordStrength.strength}%`,
+                      backgroundColor: passwordStrength.color,
+                    },
                   ]}
                 />
               </View>
               {passwordStrength.label && (
-                <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                <Text
+                  style={[
+                    styles.strengthLabel,
+                    { color: passwordStrength.color },
+                  ]}
+                >
                   {passwordStrength.label}
                 </Text>
               )}
@@ -184,8 +233,17 @@ export default function SignupScreen() {
         {/* Confirm Password */}
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Confirm Password</Text>
-          <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
-            <Ionicons name="lock-closed" color={errors.confirmPassword ? '#EF4444' : '#10B981'} size={20} />
+          <View
+            style={[
+              styles.inputContainer,
+              errors.confirmPassword && styles.inputError,
+            ]}
+          >
+            <Ionicons
+              name="lock-closed"
+              color={errors.confirmPassword ? '#EF4444' : '#10B981'}
+              size={20}
+            />
             <TextInput
               style={styles.input}
               placeholder="Confirm your password"
@@ -199,16 +257,23 @@ export default function SignupScreen() {
               style={styles.eyeButton}
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             >
-              <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} color="#6B7280" size={20} />
+              <Ionicons
+                name={showConfirmPassword ? 'eye-off' : 'eye'}
+                color="#6B7280"
+                size={20}
+              />
             </Pressable>
           </View>
-          {formData.confirmPassword && formData.password === formData.confirmPassword && (
-            <View style={styles.matchIndicator}>
-              <Ionicons name="checkmark-circle" color="#10B981" size={16} />
-              <Text style={styles.matchText}>Passwords match</Text>
-            </View>
+          {formData.confirmPassword &&
+            formData.password === formData.confirmPassword && (
+              <View style={styles.matchIndicator}>
+                <Ionicons name="checkmark-circle" color="#10B981" size={16} />
+                <Text style={styles.matchText}>Passwords match</Text>
+              </View>
+            )}
+          {errors.confirmPassword && (
+            <Text style={styles.fieldError}>{errors.confirmPassword}</Text>
           )}
-          {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword}</Text>}
         </View>
 
         {/* Terms */}
@@ -220,7 +285,7 @@ export default function SignupScreen() {
           </Text>
         </View>
 
-        {/* Signup Button */}
+        {/* Submit */}
         <Pressable
           style={[styles.signupButton, loading && styles.disabledButton]}
           onPress={handleSignup}
@@ -231,12 +296,14 @@ export default function SignupScreen() {
           </Text>
         </Pressable>
 
-        {/* ✅ Fixed Text+Link Section */}
+        {/* ✅ FIXED: Web-compatible text/link */}
         <View style={styles.linkContainer}>
-          <Text style={styles.linkQuestion}>Already have an account? </Text>
-          <Pressable onPress={() => router.push('/(auth)/login')}>
-            <Text style={styles.linkText}>Sign in</Text>
-          </Pressable>
+          <Text style={styles.linkQuestion}>
+            Already have an account?{' '}
+            <Text style={styles.linkText} onPress={() => router.push('/(auth)/login')}>
+              Sign in
+            </Text>
+          </Text>
         </View>
 
         <View style={styles.bottomSpacing} />
@@ -244,10 +311,9 @@ export default function SignupScreen() {
     </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     paddingTop: 60,
     paddingHorizontal: 24,
@@ -257,26 +323,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
-  title: {
-    fontSize: 32,
-    fontFamily: 'Poppins-Bold',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#ffffff',
-    opacity: 0.9,
-  },
+  title: { fontSize: 32, fontFamily: 'Poppins-Bold', color: '#fff', marginBottom: 8 },
+  subtitle: { fontSize: 16, fontFamily: 'Inter-Regular', color: '#fff', opacity: 0.9 },
   form: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: 24,
@@ -290,21 +346,9 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
   },
-  errorText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#DC2626',
-    textAlign: 'center',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#374151',
-    marginBottom: 8,
-  },
+  errorText: { fontSize: 14, fontFamily: 'Inter-Regular', color: '#DC2626', textAlign: 'center' },
+  inputGroup: { marginBottom: 20 },
+  inputLabel: { fontSize: 16, fontFamily: 'Inter-SemiBold', color: '#374151', marginBottom: 8 },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -315,69 +359,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 56,
   },
-  inputError: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
-  },
-  input: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#111827',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  fieldError: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#EF4444',
-    marginTop: 4,
-  },
-  passwordStrength: {
-    marginTop: 8,
-  },
-  strengthBar: {
-    height: 4,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginBottom: 4,
-  },
-  strengthFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  strengthLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-  },
-  matchIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    gap: 4,
-  },
-  matchText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#10B981',
-  },
-  termsContainer: {
-    marginBottom: 32,
-  },
-  termsText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  termsLink: {
-    color: '#10B981',
-    fontFamily: 'Inter-SemiBold',
-  },
+  inputError: { borderColor: '#EF4444', backgroundColor: '#FEF2F2' },
+  input: { flex: 1, marginLeft: 12, fontSize: 16, fontFamily: 'Inter-Regular', color: '#111827' },
+  eyeButton: { padding: 4 },
+  fieldError: { fontSize: 14, fontFamily: 'Inter-Regular', color: '#EF4444', marginTop: 4 },
+  passwordStrength: { marginTop: 8 },
+  strengthBar: { height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden', marginBottom: 4 },
+  strengthFill: { height: '100%', borderRadius: 2 },
+  strengthLabel: { fontSize: 12, fontFamily: 'Inter-SemiBold' },
+  matchIndicator: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
+  matchText: { fontSize: 14, fontFamily: 'Inter-Regular', color: '#10B981' },
+  termsContainer: { marginBottom: 32 },
+  termsText: { fontSize: 14, fontFamily: 'Inter-Regular', color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  termsLink: { color: '#10B981', fontFamily: 'Inter-SemiBold' },
   signupButton: {
     backgroundColor: '#10B981',
     borderRadius: 16,
@@ -390,32 +384,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  disabledButton: {
-    opacity: 0.6,
-    shadowOpacity: 0.1,
-  },
-  signupButtonText: {
-    fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  linkQuestion: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#6B7280',
-  },
-  linkText: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#10B981',
-  },
-  bottomSpacing: {
-    height: 40,
-  },
+  disabledButton: { opacity: 0.6, shadowOpacity: 0.1 },
+  signupButtonText: { fontSize: 18, fontFamily: 'Inter-SemiBold', color: '#fff' },
+  linkContainer: { justifyContent: 'center', alignItems: 'center', marginBottom: 20, paddingHorizontal: 16 },
+  linkQuestion: { fontSize: 16, fontFamily: 'Inter-Regular', color: '#6B7280', textAlign: 'center' },
+  linkText: { color: '#10B981', fontFamily: 'Inter-SemiBold', textDecorationLine: 'underline' },
+  bottomSpacing: { height: 40 },
 });
