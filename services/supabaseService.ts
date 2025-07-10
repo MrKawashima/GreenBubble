@@ -66,6 +66,21 @@ export const SupabaseService = {
     return user;
   },
 
+  async createUserProfile(userId: string, email: string, name: string) {
+    const { error } = await supabase
+      .from('users')
+      .insert({
+        id: userId,
+        name,
+        email,
+        points: 0,
+        level: 1,
+        badges: [],
+      });
+
+    if (error) throw error;
+  },
+
   // User operations
   async getUser(userId: string): Promise<User | null> {
     try {
