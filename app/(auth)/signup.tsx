@@ -276,7 +276,8 @@ export default function SignupScreen() {
         </Pressable>
 
         <View style={styles.linkContainer}>
-          <Text style={styles.linkQuestion}>Already have an account? </Text>
+          <Text style={styles.linkQuestion}>Already have an account?</Text>
+          <Text> </Text>
           <Pressable onPress={() => router.push('/(auth)/login')}>
             <Text style={styles.linkText}>Sign in</Text>
           </Pressable>
