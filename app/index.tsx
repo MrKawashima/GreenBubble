@@ -8,10 +8,14 @@ export default function IndexScreen() {
   const { session, authLoading } = useAuth();
 
   useEffect(() => {
+    console.log('IndexScreen: Auth loading:', authLoading, 'Session:', session ? 'exists' : 'none');
+    
     if (!authLoading) {
       if (session) {
+        console.log('IndexScreen: Redirecting to tabs');
         router.replace('/(tabs)');
       } else {
+        console.log('IndexScreen: Redirecting to welcome');
         router.replace('/(auth)/welcome');
       }
     }
