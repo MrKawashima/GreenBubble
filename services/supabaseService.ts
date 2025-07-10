@@ -31,7 +31,6 @@ export const SupabaseService = {
 
       return data;
     } catch (error) {
-      console.error('SignUp error:', error);
       throw error;
     }
   },
