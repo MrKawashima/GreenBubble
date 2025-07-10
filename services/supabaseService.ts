@@ -56,12 +56,13 @@ export const SupabaseService = {
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
       throw error;
     }
+
+    if (!data) return null; // No user found
 
     return {
       ...data,
