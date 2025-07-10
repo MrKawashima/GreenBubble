@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Modal, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Settings, LogOut, Share, Users, Award, Leaf, Trophy, Star, X, Crown, Plus, Hash } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { BadgeService, LEVELS } from '@/services/badgeService';
@@ -98,19 +98,19 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
-      icon: <Share color="#6B7280" size={20} />,
+      icon: <Ionicons name="share" color="#6B7280" size={20} />,
       title: 'Invite Friends',
       subtitle: 'Share your Bubble with others',
       onPress: () => Alert.alert('Coming Soon', 'Invite feature will be available soon!')
     },
     {
-      icon: <Settings color="#6B7280" size={20} />,
+      icon: <Ionicons name="settings" color="#6B7280" size={20} />,
       title: 'Settings',
       subtitle: 'Notifications, privacy, and more',
       onPress: () => Alert.alert('Coming Soon', 'Settings will be available soon!')
     },
     {
-      icon: <LogOut color="#EF4444" size={20} />,
+      icon: <Ionicons name="log-out" color="#EF4444" size={20} />,
       title: 'Logout',
       subtitle: 'Sign out of your account',
       onPress: handleLogout
@@ -125,7 +125,7 @@ export default function ProfileScreen() {
       >
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
-            <User color={currentLevel.color} size={32} />
+            <Ionicons name="person" color={currentLevel.color} size={32} />
           </View>
           <Text style={styles.userName}>{user?.name}</Text>
           <Text style={styles.userEmail}>{user?.email}</Text>
@@ -169,7 +169,7 @@ export default function ProfileScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: currentLevel.color + '20' }]}>
-              <Award color={currentLevel.color} size={24} />
+              <Ionicons name="trophy" color={currentLevel.color} size={24} />
             </View>
             <Text style={styles.statNumber}>{user?.points || 0}</Text>
             <Text style={styles.statLabel}>Total Points</Text>
@@ -177,7 +177,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Leaf color="#10B981" size={24} />
+              <Ionicons name="leaf" color="#10B981" size={24} />
             </View>
             <Text style={styles.statNumber}>{totalBubbleCO2.toFixed(1)}kg</Text>
             <Text style={styles.statLabel}>CO₂ Saved</Text>
@@ -185,7 +185,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Users color="#3B82F6" size={24} />
+              <Ionicons name="people" color="#3B82F6" size={24} />
             </View>
             <Text style={styles.statNumber}>{userBubbles.length}</Text>
             <Text style={styles.statLabel}>Bubbles</Text>
@@ -193,7 +193,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Trophy color="#F59E0B" size={24} />
+              <Ionicons name="trophy" color="#F59E0B" size={24} />
             </View>
             <Text style={styles.statNumber}>{earnedBadges.length}</Text>
             <Text style={styles.statLabel}>Badges</Text>
@@ -203,7 +203,7 @@ export default function ProfileScreen() {
         {/* Bubbles Section */}
         <View style={styles.bubblesSection}>
           <View style={styles.sectionHeader}>
-            <Users color="#3B82F6" size={20} />
+            <Ionicons name="people" color="#3B82F6" size={20} />
             <Text style={styles.sectionTitle}>Your Bubbles</Text>
           </View>
           
@@ -211,7 +211,7 @@ export default function ProfileScreen() {
             {userBubbles.slice(0, 3).map((userBubble, index) => (
               <View key={userBubble.id} style={styles.bubblePreviewCard}>
                 <View style={styles.bubblePreviewIcon}>
-                  <Users color="#10B981" size={16} />
+                  <Ionicons name="people" color="#10B981" size={16} />
                 </View>
                 <Text style={styles.bubblePreviewText}>
                   Bubble {userBubble.bubbleId.slice(0, 6)}
@@ -244,7 +244,7 @@ export default function ProfileScreen() {
         {earnedBadges.length > 0 && (
           <View style={styles.badgesSection}>
             <View style={styles.sectionHeader}>
-              <Trophy color="#F59E0B" size={20} />
+              <Ionicons name="trophy" color="#F59E0B" size={20} />
               <Text style={styles.sectionTitle}>Your Badges</Text>
             </View>
             
@@ -266,7 +266,7 @@ export default function ProfileScreen() {
                     <View style={styles.badgeIconContainer}>
                       <Text style={styles.badgeIcon}>{badge.icon}</Text>
                       <View style={styles.earnedIndicator}>
-                        <Star color="#F59E0B" size={12} fill="#F59E0B" />
+                        <Ionicons name="star" color="#F59E0B" size={12} />
                       </View>
                     </View>
                     <Text style={styles.badgeName}>{badge.name}</Text>
@@ -281,7 +281,7 @@ export default function ProfileScreen() {
         {availableBadges.length > 0 && (
           <View style={styles.badgesSection}>
             <View style={styles.sectionHeader}>
-              <Crown color="#6B7280" size={20} />
+              <Ionicons name="ribbon" color="#6B7280" size={20} />
               <Text style={styles.sectionTitle}>Available Badges</Text>
             </View>
             
@@ -308,7 +308,7 @@ export default function ProfileScreen() {
           
           <Pressable style={styles.actionCard} onPress={handleJoinNewBubble}>
             <View style={styles.actionIcon}>
-              <Plus color="#10B981" size={20} />
+              <Ionicons name="add" color="#10B981" size={20} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Join Another Bubble</Text>
@@ -318,7 +318,7 @@ export default function ProfileScreen() {
 
           <Pressable style={styles.actionCard}>
             <View style={styles.actionIcon}>
-              <Share color="#3B82F6" size={20} />
+              <Ionicons name="share" color="#3B82F6" size={20} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Share Your Impact</Text>
@@ -373,7 +373,7 @@ export default function ProfileScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubblesList(false)}
             >
-              <X color="#6B7280" size={20} />
+              <Ionicons name="close" color="#6B7280" size={20} />
             </Pressable>
           </View>
           
@@ -381,7 +381,7 @@ export default function ProfileScreen() {
             {userBubbles.map((userBubble) => (
               <View key={userBubble.id} style={styles.bubbleListCard}>
                 <View style={styles.bubbleListIcon}>
-                  <Users color="#10B981" size={24} />
+                  <Ionicons name="people" color="#10B981" size={24} />
                 </View>
                 <View style={styles.bubbleListInfo}>
                   <Text style={styles.bubbleListName}>
@@ -401,7 +401,7 @@ export default function ProfileScreen() {
             ))}
 
             <Pressable style={styles.joinNewBubbleCard} onPress={handleJoinNewBubble}>
-              <Plus color="#10B981" size={24} />
+              <Ionicons name="add" color="#10B981" size={24} />
               <Text style={styles.joinNewBubbleText}>Join Another Bubble</Text>
             </Pressable>
           </ScrollView>
@@ -423,7 +423,7 @@ export default function ProfileScreen() {
                   style={styles.closeButton}
                   onPress={() => setSelectedBadge(null)}
                 >
-                  <X color="#6B7280" size={20} />
+                  <Ionicons name="close" color="#6B7280" size={20} />
                 </Pressable>
               </View>
               
@@ -437,7 +437,7 @@ export default function ProfileScreen() {
 
               {selectedBadge.earned ? (
                 <View style={styles.earnedStatus}>
-                  <Star color="#F59E0B" size={20} fill="#F59E0B" />
+                  <Ionicons name="star" color="#F59E0B" size={20} />
                   <Text style={styles.earnedText}>Badge Earned!</Text>
                 </View>
               ) : (

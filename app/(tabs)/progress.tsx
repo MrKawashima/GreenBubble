@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Award, Leaf, TrendingUp, Users, Calendar, ChevronDown, X, Filter } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
 import { Bubble, ChallengeCompletion, UserBubble } from '@/types';
@@ -151,10 +151,10 @@ export default function ProgressScreen() {
             onPress={() => setShowBubbleFilter(true)}
           >
             <View style={styles.filterInfo}>
-              <Filter color="#ffffff" size={16} />
+              <Ionicons name="filter" color="#ffffff" size={16} />
               <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
             </View>
-            <ChevronDown color="#ffffff" size={16} />
+            <Ionicons name="chevron-down" color="#ffffff" size={16} />
           </Pressable>
         )}
       </LinearGradient>
@@ -193,7 +193,7 @@ export default function ProgressScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Leaf color="#10B981" size={24} />
+              <Ionicons name="leaf" color="#10B981" size={24} />
             </View>
             <Text style={styles.statNumber}>
               {totalBubbleCO2.toFixed(1)}kg
@@ -203,7 +203,7 @@ export default function ProgressScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Calendar color="#3B82F6" size={24} />
+              <Ionicons name="calendar" color="#3B82F6" size={24} />
             </View>
             <Text style={styles.statNumber}>
               {totalCompletions}
@@ -213,7 +213,7 @@ export default function ProgressScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Users color="#F59E0B" size={24} />
+              <Ionicons name="people" color="#F59E0B" size={24} />
             </View>
             <Text style={styles.statNumber}>
               {userBubbles.length}
@@ -223,7 +223,7 @@ export default function ProgressScreen() {
 
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <TrendingUp color="#EF4444" size={24} />
+              <Ionicons name="trending-up" color="#EF4444" size={24} />
             </View>
             <Text style={styles.statNumber}>
               {earnedBadges.length}
@@ -242,7 +242,7 @@ export default function ProgressScreen() {
               <View key={progress.bubble.id} style={styles.bubbleCard}>
                 <View style={styles.bubbleHeader}>
                   <View style={styles.bubbleIcon}>
-                    <Users color="#10B981" size={24} />
+                    <Ionicons name="people" color="#10B981" size={24} />
                   </View>
                   <View style={styles.bubbleInfo}>
                     <Text style={styles.bubbleTitle}>{progress.bubble.name}</Text>
@@ -319,7 +319,7 @@ export default function ProgressScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubbleFilter(false)}
             >
-              <X color="#6B7280" size={24} />
+              <Ionicons name="close" color="#6B7280" size={24} />
             </Pressable>
           </View>
 
@@ -336,7 +336,7 @@ export default function ProgressScreen() {
             >
               <Text style={styles.filterOptionText}>All Bubbles</Text>
               {!selectedBubbleFilter && (
-                <Award color="#10B981" size={20} />
+                <Ionicons name="trophy" color="#10B981" size={20} />
               )}
             </Pressable>
 
@@ -354,14 +354,14 @@ export default function ProgressScreen() {
               >
                 <View style={styles.filterOptionContent}>
                   <View style={styles.filterOptionIcon}>
-                    <Users color="#10B981" size={20} />
+                    <Ionicons name="people" color="#10B981" size={20} />
                   </View>
                   <Text style={styles.filterOptionText}>
                     Bubble {userBubble.bubbleId.slice(0, 8)}
                   </Text>
                 </View>
                 {selectedBubbleFilter === userBubble.bubbleId && (
-                  <Award color="#10B981" size={20} />
+                  <Ionicons name="trophy" color="#10B981" size={20} />
                 )}
               </Pressable>
             ))}
