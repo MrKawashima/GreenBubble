@@ -35,7 +35,7 @@ export default function WelcomeScreen() {
           
           <View style={styles.feature}>
             <Leaf color="#ffffff" size={24} />
-            <Text style={styles.featureText}>Track your CO₂ impact</Text>
+            <Text style={styles.featureText}>Track your CO2 impact</Text>
           </View>
         </View>
         
