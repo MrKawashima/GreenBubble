@@ -55,13 +55,12 @@ export default function OnboardingScreen() {
       
       // Set as active bubble and refresh user data
       await SupabaseService.switchActiveBubble(currentUser.id, bubbleId);
-      await refreshUserBubbles();
       
-      // Force reload user data to get the updated active bubble
-      const updatedUser = await SupabaseService.getUser(currentUser.id);
-      if (updatedUser) {
-        await updateUserData(updatedUser);
-      }
+      // Update user context with new active bubble
+      await updateUserData({ activeBubbleId: bubbleId });
+      
+      // Refresh user bubbles to include the new one
+      await refreshUserBubbles();
       
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -106,13 +105,12 @@ export default function OnboardingScreen() {
       
       // Set as active bubble and refresh user data
       await SupabaseService.switchActiveBubble(currentUser.id, bubble.id);
-      await refreshUserBubbles();
       
-      // Force reload user data to get the updated active bubble
-      const updatedUser = await SupabaseService.getUser(currentUser.id);
-      if (updatedUser) {
-        await updateUserData(updatedUser);
-      }
+      // Update user context with new active bubble
+      await updateUserData({ activeBubbleId: bubble.id });
+      
+      // Refresh user bubbles to include the new one
+      await refreshUserBubbles();
       
       Alert.alert('Success!', `You've joined ${bubble.name}!`);
       router.replace('/(tabs)');

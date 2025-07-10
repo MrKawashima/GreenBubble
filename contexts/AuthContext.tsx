@@ -161,7 +161,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserData = async (updates: Partial<User>) => {
     if (session?.user && user) {
       try {
+        // Update the database
         await SupabaseService.updateUser(session.user.id, updates);
+        // Update the local context immediately
         setUser({ ...user, ...updates });
       } catch (error) {
         throw error;
