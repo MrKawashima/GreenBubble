@@ -14,6 +14,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [userCompleted, setUserCompleted] = useState(false);
   const [showBubbleSelector, setShowBubbleSelector] = useState(false);
+  const [bubbleNames, setBubbleNames] = useState<Record<string, string>>({});
   const { user, userBubbles, switchActiveBubble, refreshUserBubbles } = useAuth();
 
   const loadData = async () => {
@@ -41,10 +42,29 @@ export default function HomeScreen() {
     }
   };
 
+  const loadBubbleNames = async () => {
+    try {
+      const names: Record<string, string> = {};
+      for (const userBubble of userBubbles) {
+        const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
+        if (bubble) {
+          names[userBubble.bubbleId] = bubble.name;
+        }
+      }
+      setBubbleNames(names);
+    } catch (error) {
+      console.error('Error loading bubble names:', error);
+    }
+  };
   useEffect(() => {
     loadData();
   }, [user?.activeBubbleId]);
 
+  useEffect(() => {
+    if (userBubbles.length > 0) {
+      loadBubbleNames();
+    }
+  }, [userBubbles]);
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([loadData(), refreshUserBubbles()]);
@@ -256,7 +276,9 @@ export default function HomeScreen() {
                     <Ionicons name="people" color="#10B981" size={24} />
                   </View>
                   <View style={styles.bubbleOptionInfo}>
-                    <Text style={styles.bubbleOptionName}>Loading...</Text>
+                    <Text style={styles.bubbleOptionName}>
+                      {bubbleNames[userBubble.bubbleId] || 'Loading...'}
+                    </Text>
                     <Text style={styles.bubbleOptionStats}>
                       {userBubble.points} points • {userBubble.co2Saved}kg CO₂
                     </Text>
