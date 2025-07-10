@@ -4,20 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Leaf, Users, Target } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
-interface FeatureProps {
-  icon: React.ReactNode;
-  text: string;
-}
-
-const Feature: React.FC<FeatureProps> = ({ icon, text }) => {
-  return (
-    <View style={styles.feature}>
-      {icon}
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
-  );
-};
-
 export default function WelcomeScreen() {
   const router = useRouter();
 
@@ -32,27 +18,22 @@ export default function WelcomeScreen() {
             <Leaf color="#ffffff" size={40} />
           </View>
         </View>
-        
         <Text style={styles.title}>GreenBubble</Text>
-        <Text style={styles.subtitle}>
-          Join your friends in weekly environmental challenges and make a positive impact together
-        </Text>
-        
+        <Text style={styles.subtitle}>Join your friends in weekly environmental challenges and make a positive impact together</Text>
         <View style={styles.featuresContainer}>
-          <Feature 
-            icon={<Users color="#ffffff" size={24} />} 
-            text="Create or join Bubbles" 
-          />
-          <Feature 
-            icon={<Target color="#ffffff" size={24} />} 
-            text="Complete weekly challenges" 
-          />
-          <Feature 
-            icon={<Leaf color="#ffffff" size={24} />} 
-            text="Track your CO2 impact" 
-          />
+          <View style={styles.feature}>
+            <Users color="#ffffff" size={24} />
+            <Text style={styles.featureText}>Create or join Bubbles</Text>
+          </View>
+          <View style={styles.feature}>
+            <Target color="#ffffff" size={24} />
+            <Text style={styles.featureText}>Complete weekly challenges</Text>
+          </View>
+          <View style={styles.feature}>
+            <Leaf color="#ffffff" size={24} />
+            <Text style={styles.featureText}>Track your CO2 impact</Text>
+          </View>
         </View>
-        
         <View style={styles.buttonContainer}>
           <Pressable 
             style={styles.primaryButton}
@@ -60,7 +41,6 @@ export default function WelcomeScreen() {
           >
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </Pressable>
-          
           <Pressable 
             style={styles.secondaryButton}
             onPress={() => router.push('/(auth)/login')}
