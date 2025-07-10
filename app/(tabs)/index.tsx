@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Users, Award, Leaf, Camera, CircleCheck as CheckCircle, ChevronDown, Plus, Hash, X } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseService } from '@/services/supabaseService';
 import { Challenge, Bubble, ChallengeCompletion } from '@/types';
@@ -117,12 +117,12 @@ export default function HomeScreen() {
             onPress={() => setShowBubbleSelector(true)}
           >
             <View style={styles.bubbleInfo}>
-              <Users color="#ffffff" size={20} />
+              <Ionicons name="people" color="#ffffff" size={20} />
               <Text style={styles.bubbleName}>
                 {activeBubble?.name || 'Select Bubble'}
               </Text>
             </View>
-            <ChevronDown color="#ffffff" size={20} />
+            <Ionicons name="chevron-down" color="#ffffff" size={20} />
           </Pressable>
           
           {userBubbles.length > 1 && (
@@ -139,7 +139,7 @@ export default function HomeScreen() {
             <View style={styles.challengeHeader}>
               <Text style={styles.challengeTitle}>This Week's Challenge</Text>
               <View style={styles.challengeBadge}>
-                <Leaf color="#10B981" size={16} />
+                <Ionicons name="leaf" color="#10B981" size={16} />
                 <Text style={styles.challengePoints}>+{activeChallenge.points} pts</Text>
               </View>
             </View>
@@ -164,7 +164,7 @@ export default function HomeScreen() {
 
             {userCompleted ? (
               <View style={styles.completedButton}>
-                <CheckCircle color="#10B981" size={20} />
+                <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 <Text style={styles.completedButtonText}>Challenge Completed!</Text>
               </View>
             ) : (
@@ -172,14 +172,14 @@ export default function HomeScreen() {
                 style={styles.completeButton}
                 onPress={handleCompleteChallenge}
               >
-                <Camera color="#ffffff" size={20} />
+                <Ionicons name="camera" color="#ffffff" size={20} />
                 <Text style={styles.completeButtonText}>Complete Challenge</Text>
               </Pressable>
             )}
           </View>
         ) : (
           <View style={styles.noChallengeCard}>
-            <Award color="#6B7280" size={48} />
+            <Ionicons name="trophy" color="#6B7280" size={48} />
             <Text style={styles.noChallengeTitle}>No Active Challenge</Text>
             <Text style={styles.noChallengeText}>
               Check back soon for this week's environmental challenge!
@@ -193,14 +193,14 @@ export default function HomeScreen() {
             <View style={styles.impactGrid}>
               <View style={styles.impactItem}>
                 <View style={styles.impactIcon}>
-                  <Leaf color="#10B981" size={24} />
+                  <Ionicons name="leaf" color="#10B981" size={24} />
                 </View>
                 <Text style={styles.impactNumber}>{activeBubble.totalCO2Saved}kg</Text>
                 <Text style={styles.impactLabel}>CO₂ Saved</Text>
               </View>
               <View style={styles.impactItem}>
                 <View style={styles.impactIcon}>
-                  <Award color="#F59E0B" size={24} />
+                  <Ionicons name="trophy" color="#F59E0B" size={24} />
                 </View>
                 <Text style={styles.impactNumber}>{activeBubble.totalPoints}</Text>
                 <Text style={styles.impactLabel}>Total Points</Text>
@@ -215,7 +215,7 @@ export default function HomeScreen() {
             {completions.slice(0, 3).map((completion) => (
               <View key={completion.id} style={styles.activityItem}>
                 <View style={styles.activityIcon}>
-                  <CheckCircle color="#10B981" size={16} />
+                  <Ionicons name="checkmark-circle" color="#10B981" size={16} />
                 </View>
                 <Text style={styles.activityText}>
                   Challenge completed
@@ -242,7 +242,7 @@ export default function HomeScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubbleSelector(false)}
             >
-              <X color="#6B7280" size={24} />
+              <Ionicons name="close" color="#6B7280" size={24} />
             </Pressable>
           </View>
 
@@ -258,7 +258,7 @@ export default function HomeScreen() {
               >
                 <View style={styles.bubbleOptionContent}>
                   <View style={styles.bubbleOptionIcon}>
-                    <Users color="#10B981" size={24} />
+                    <Ionicons name="people" color="#10B981" size={24} />
                   </View>
                   <View style={styles.bubbleOptionInfo}>
                     <Text style={styles.bubbleOptionName}>Loading...</Text>
@@ -268,13 +268,13 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 {user?.activeBubbleId === userBubble.bubbleId && (
-                  <CheckCircle color="#10B981" size={20} />
+                  <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 )}
               </Pressable>
             ))}
 
             <Pressable style={styles.joinNewBubble} onPress={handleJoinNewBubble}>
-              <Plus color="#10B981" size={24} />
+              <Ionicons name="add" color="#10B981" size={24} />
               <Text style={styles.joinNewBubbleText}>Join Another Bubble</Text>
             </Pressable>
           </ScrollView>
