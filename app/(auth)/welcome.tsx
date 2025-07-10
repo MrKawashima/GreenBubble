@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Leaf, Users, Target } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router'; // Changed `router` to `useRouter` for hooks-based routing
 
 export default function WelcomeScreen() {
+  const router = useRouter(); // Use `useRouter` hook for navigation
+
   return (
     <LinearGradient 
       colors={['#10B981', '#059669', '#047857']} 
@@ -42,14 +44,14 @@ export default function WelcomeScreen() {
         <View style={styles.buttonContainer}>
           <Pressable 
             style={styles.primaryButton}
-            onPress={() => router.push('/(auth)/signup')}
+            onPress={() => router.push('/(auth)/signup')} // Navigation action fixed
           >
             <Text style={styles.primaryButtonText}>Get Started</Text>
           </Pressable>
           
           <Pressable 
             style={styles.secondaryButton}
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => router.push('/(auth)/login')} // Navigation action fixed
           >
             <Text style={styles.secondaryButtonText}>I already have an account</Text>
           </Pressable>
@@ -82,14 +84,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Bold', // Make sure this font is loaded
     color: '#ffffff',
     textAlign: 'center',
     marginBottom: 16,
   },
   subtitle: {
     fontSize: 18,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Regular', // Make sure this font is loaded
     color: '#ffffff',
     textAlign: 'center',
     lineHeight: 24,
@@ -108,7 +110,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Regular', // Make sure this font is loaded
     color: '#ffffff',
     marginLeft: 16,
   },
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Inter-SemiBold', // Make sure this font is loaded
     color: '#047857',
   },
   secondaryButton: {
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Regular', // Make sure this font is loaded
     color: '#ffffff',
   },
 });
