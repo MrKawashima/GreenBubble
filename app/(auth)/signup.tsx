@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -21,6 +21,7 @@ export default function SignupScreen() {
     confirmPassword?: string;
     general?: string;
   }>({});
+  const [scrollViewRef, setScrollViewRef] = useState<ScrollView | null>(null);
   const { signUp, loading } = useAuth();
 
   const validateForm = () => {
@@ -80,6 +81,10 @@ export default function SignupScreen() {
       
       console.warn('Signup attempt failed:', errorMessage);
       setErrors({ general: errorMessage });
+      
+      // Show alert for immediate visibility and scroll to top
+      Alert.alert('Signup Failed', errorMessage);
+      scrollViewRef?.scrollTo({ y: 0, animated: true });
     }
   };
 
@@ -130,6 +135,11 @@ export default function SignupScreen() {
       </View>
 
       <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        ref={setScrollViewRef}
+        style={styles.form} 
+        showsVerticalScrollIndicator={false}
+      >
         {errors.general && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{errors.general}</Text>
