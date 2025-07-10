@@ -55,7 +55,7 @@ export default function WelcomeScreen() {
 }
 
 // A reusable Feature component to avoid redundancy
-const Feature = ({ icon, text }) => (
+const Feature = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
   <View style={styles.feature}>
     {icon}
     <Text style={styles.featureText}>{text}</Text>
