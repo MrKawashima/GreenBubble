@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "bolt-expo-nativewind",
-    "slug": "bolt-expo-nativewind",
-    "version": "1.0.0",
+    "name": "GreenBubble",
+    "slug": "greenbubble",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "greenbubble",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
