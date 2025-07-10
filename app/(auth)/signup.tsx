@@ -68,8 +68,6 @@ export default function SignupScreen() {
       await signUp(formData.email, formData.password, formData.name);
       router.replace('/(auth)/onboarding');
     } catch (error: any) {
-      console.error('Signup error:', error);
-      
       let errorMessage = 'An unexpected error occurred';
       
       if (error.message?.includes('User already registered')) {
@@ -80,6 +78,7 @@ export default function SignupScreen() {
         errorMessage = 'Please enter a valid email address';
       }
       
+      console.error('Signup error:', errorMessage);
       setErrors({ general: errorMessage });
     }
   };
