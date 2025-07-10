@@ -133,8 +133,8 @@ export default function SignupScreen() {
       <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
         {errors.general && (
           <View style={styles.errorContainer}>
-            {/* Make sure we only render text if there's an error message */}
-            {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
+            {/* Render the error message only if it exists */}
+            <Text style={styles.errorText}>{errors.general || ''}</Text>
           </View>
         )}
 
@@ -211,9 +211,9 @@ export default function SignupScreen() {
                   ]} 
                 />
               </View>
-              {/* Only render if there's a label for password strength */}
+              {/* Render password strength label only if it exists */}
               {passwordStrength.label && <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                {passwordStrength.label}
+                {passwordStrength.label || ''}
               </Text>}
             </View>
           )}
