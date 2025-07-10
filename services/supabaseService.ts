@@ -98,7 +98,7 @@ export const SupabaseService = {
 
       return {
         ...data,
-        activeBubbleId: data.active_bubble_id,
+        activeBubbleId: data.bubble_id,
         createdAt: new Date(data.created_at),
       } as User;
     } catch (error) {
@@ -112,7 +112,7 @@ export const SupabaseService = {
       .from('users')
       .update({
         name: updates.name,
-        active_bubble_id: updates.activeBubbleId,
+        bubble_id: updates.activeBubbleId,
         points: updates.points,
         level: updates.level,
         badges: updates.badges,
