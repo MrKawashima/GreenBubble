@@ -10,7 +10,7 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@expo-google-fonts/inter": "^0.6.0",
+    "@expo-google-fonts/inter": "^0.5.0",  // Downgraded to a version that exists
     "@expo-google-fonts/poppins": "^0.6.0",
     "@expo/vector-icons": "^14.1.0",
     "@lucide/lab": "^0.1.3",
