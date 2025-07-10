@@ -53,7 +53,8 @@ export default function OnboardingScreen() {
       // Join the bubble
       await SupabaseService.joinBubble(bubbleId, currentUser.id);
       
-      // Refresh user bubbles to include the new one
+      // Refresh user data and bubbles to reflect the new active bubble
+      await updateUserData({ activeBubbleId: bubbleId });
       await refreshUserBubbles();
       
       // Set as active bubble after refreshing bubbles
@@ -100,7 +101,8 @@ export default function OnboardingScreen() {
 
       await SupabaseService.joinBubble(bubble.id, currentUser.id);
       
-      // Refresh user bubbles to include the new one
+      // Refresh user data and bubbles to reflect the new active bubble  
+      await updateUserData({ activeBubbleId: bubble.id });
       await refreshUserBubbles();
       
       // Set as active bubble after refreshing bubbles

@@ -139,6 +139,10 @@ export const SupabaseService = {
       .single();
 
     if (error) throw error;
+    
+    // Set this bubble as the active bubble for the creator
+    await this.switchActiveBubble(bubbleData.createdBy, data.id);
+    
     return data.id;
   },
 
