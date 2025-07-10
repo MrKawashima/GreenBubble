@@ -90,6 +90,8 @@ export const SupabaseService = {
         .maybeSingle();
 
       if (error) {
+        console.error('GetUserBubbles database error:', error);
+        console.error('GetUser database error:', error);
         throw error;
       }
 
@@ -102,7 +104,8 @@ export const SupabaseService = {
       } as User;
     } catch (error) {
       console.error('GetUser error:', error);
-      throw error;
+      // Return null instead of throwing to prevent crashes
+      return null;
     }
   },
 

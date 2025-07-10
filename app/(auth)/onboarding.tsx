@@ -29,6 +29,7 @@ export default function OnboardingScreen() {
       const currentUser = await SupabaseService.getCurrentUser();
       if (!currentUser) {
         Alert.alert('Error', 'Please log in again');
+        setLoading(false);
         return;
       }
 
@@ -59,6 +60,9 @@ export default function OnboardingScreen() {
       
       // Set as active bubble after refreshing bubbles
       await switchActiveBubble(bubbleId);
+      // Small delay to ensure context is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -81,6 +85,7 @@ export default function OnboardingScreen() {
       const currentUser = await SupabaseService.getCurrentUser();
       if (!currentUser) {
         Alert.alert('Error', 'Please log in again');
+        setLoading(false);
         return;
       }
 
@@ -96,6 +101,7 @@ export default function OnboardingScreen() {
       
       if (!bubble) {
         Alert.alert('Error', 'Invalid invite code. Please check and try again.');
+        setLoading(false);
         return;
       }
 
@@ -104,6 +110,9 @@ export default function OnboardingScreen() {
       // Refresh user data and bubbles to reflect the new active bubble  
       await updateUserData({ activeBubbleId: bubble.id });
       await refreshUserBubbles();
+      
+      // Small delay to ensure context is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Set as active bubble after refreshing bubbles
       await switchActiveBubble(bubble.id);

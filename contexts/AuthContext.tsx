@@ -79,10 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
-      const [userData, bubbles] = await Promise.all([
-        SupabaseService.getUser(userId),
-        SupabaseService.getUserBubbles(userId)
-      ]);
+      // Load user data first, then bubbles to avoid race conditions
+      const userData = await SupabaseService.getUser(userId);
+      const bubbles = await SupabaseService.getUserBubbles(userId);
       
       if (mounted.current) {
         setUser(userData);

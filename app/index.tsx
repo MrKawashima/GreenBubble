@@ -10,15 +10,20 @@ export default function IndexScreen() {
   useEffect(() => {
     console.log('IndexScreen: Auth loading:', authLoading, 'Session:', session ? 'exists' : 'none');
     
-    if (!authLoading) {
-      if (session) {
-        console.log('IndexScreen: Redirecting to tabs');
-        router.replace('/(tabs)');
-      } else {
-        console.log('IndexScreen: Redirecting to welcome');
-        router.replace('/(auth)/welcome');
+    // Add a small delay to prevent race conditions
+    const timer = setTimeout(() => {
+      if (!authLoading) {
+        if (session) {
+          console.log('IndexScreen: Redirecting to tabs');
+          router.replace('/(tabs)');
+        } else {
+          console.log('IndexScreen: Redirecting to welcome');
+          router.replace('/(auth)/welcome');
+        }
       }
-    }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [session, authLoading]);
 
   return (
