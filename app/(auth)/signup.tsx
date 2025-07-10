@@ -133,7 +133,7 @@ export default function SignupScreen() {
       <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
         {errors.general && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{errors.general}</Text>
+            <Text style={styles.errorText}>{errors.general || ''}</Text>
           </View>
         )}
 
@@ -150,7 +150,7 @@ export default function SignupScreen() {
               autoComplete="name"
             />
           </View>
-          {errors.name && <Text style={styles.fieldError}>{errors.name}</Text>}
+          {errors.name && <Text style={styles.fieldError}>{errors.name || ''}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -168,7 +168,7 @@ export default function SignupScreen() {
               autoComplete="email"
             />
           </View>
-          {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
+          {errors.email && <Text style={styles.fieldError}>{errors.email || ''}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -209,11 +209,11 @@ export default function SignupScreen() {
                 />
               </View>
               <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                {passwordStrength.label}
+                {passwordStrength.label || ''}
               </Text>
             </View>
           )}
-          {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
+          {errors.password && <Text style={styles.fieldError}>{errors.password || ''}</Text>}
         </View>
 
         <View style={styles.inputGroup}>
@@ -246,7 +246,7 @@ export default function SignupScreen() {
               <Text style={styles.matchText}>Passwords match</Text>
             </View>
           )}
-          {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword}</Text>}
+          {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword || ''}</Text>}
         </View>
 
         <View style={styles.termsContainer}>
