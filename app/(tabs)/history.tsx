@@ -169,10 +169,10 @@ export default function HistoryScreen() {
               onPress={() => setShowBubbleFilter(true)}
             >
               <View style={styles.filterInfo}>
-                <Filter color="#ffffff" size={16} />
+                <Ionicons name="filter" color="#ffffff" size={16} />
                 <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
               </View>
-              <ChevronDown color="#ffffff" size={16} />
+              <Ionicons name="chevron-down" color="#ffffff" size={16} />
             </Pressable>
           )}
         </LinearGradient>
@@ -253,7 +253,7 @@ export default function HistoryScreen() {
                       <Ionicons name="people" color="#6B7280" size={14} />
                       <Text style={styles.bubbleText}>{item.bubbleName}</Text>
                     </View>
-                  <Ionicons name="camera" color="#ffffff" size={20} />
+                  )}
                 </View>
               </View>
               
@@ -365,7 +365,7 @@ export default function HistoryScreen() {
                 style={styles.closeButton}
                 onPress={() => setSelectedItem(null)}
               >
-                <X color="#6B7280" size={24} />
+                <Ionicons name="close" color="#6B7280" size={24} />
               </Pressable>
             </View>
 
@@ -374,7 +374,7 @@ export default function HistoryScreen() {
                 <View style={styles.imageContainer}>
                   <Image source={{ uri: selectedItem.photo }} style={styles.fullImage} />
                   <View style={styles.imageOverlay}>
-                    <Camera color="#ffffff" size={20} />
+                    <Ionicons name="camera" color="#ffffff" size={20} />
                   </View>
                 </View>
               )}
