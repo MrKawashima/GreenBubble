@@ -134,7 +134,6 @@ export default function SignupScreen() {
         <Text style={styles.subtitle}>Create your account and start making an impact</Text>
       </View>
 
-      <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
       <ScrollView 
         ref={setScrollViewRef}
         style={styles.form} 
@@ -217,11 +216,11 @@ export default function SignupScreen() {
                   ]} 
                 />
               </View>
-            {passwordStrength.label && (
-              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                {passwordStrength.label}
-              </Text>
-            )}
+              {passwordStrength.label && (
+                <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                  {passwordStrength.label}
+                </Text>
+              )}
             </View>
           )}
           {errors.password && <Text style={styles.fieldError}>{errors.password}</Text>}
