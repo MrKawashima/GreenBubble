@@ -260,10 +260,7 @@ export const SupabaseService = {
     }
 
     // Set as active bubble if user doesn't have one
-    const user = await this.getUser(userId);
-    if (user && !user.activeBubbleId) {
-      await this.updateUser(userId, { activeBubbleId: bubbleId });
-    }
+    await this.switchActiveBubble(userId, bubbleId);
   },
 
   async leaveBubble(bubbleId: string, userId: string) {

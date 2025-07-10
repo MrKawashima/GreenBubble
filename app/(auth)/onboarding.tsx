@@ -52,6 +52,10 @@ export default function OnboardingScreen() {
 
       // Join the bubble
       await SupabaseService.joinBubble(bubbleId, currentUser.id);
+      
+      // Set as active bubble and refresh user data
+      await SupabaseService.switchActiveBubble(currentUser.id, bubbleId);
+      await updateUserData({ activeBubbleId: bubbleId });
       await refreshUserBubbles();
       
       router.replace('/(tabs)');
@@ -94,6 +98,10 @@ export default function OnboardingScreen() {
       }
 
       await SupabaseService.joinBubble(bubble.id, currentUser.id);
+      
+      // Set as active bubble and refresh user data
+      await SupabaseService.switchActiveBubble(currentUser.id, bubble.id);
+      await updateUserData({ activeBubbleId: bubble.id });
       await refreshUserBubbles();
       
       Alert.alert('Success!', `You've joined ${bubble.name}!`);
