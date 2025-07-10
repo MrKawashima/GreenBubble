@@ -253,7 +253,7 @@ export default function SignupScreen() {
           <Text style={styles.termsText}>
             By creating an account, you agree to our{' '}
             <Text style={styles.termsLink}>Terms of Service</Text>
-            <Text> and </Text>
+            {' and '}
             <Text style={styles.termsLink}>Privacy Policy</Text>
           </Text>
         </View>
