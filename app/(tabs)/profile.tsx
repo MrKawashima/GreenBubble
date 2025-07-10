@@ -357,6 +357,35 @@ export default function ProfileScreen() {
         <View style={styles.appInfo}>
           <Text style={styles.appInfoText}>GreenBubble v1.0.0</Text>
           <Text style={styles.appInfoText}>Making environmental impact social</Text>
+          
+          {/* Development Reset Button - Remove before launch */}
+          <Pressable 
+            style={styles.resetButton}
+            onPress={() => {
+              Alert.alert(
+                'Reset App',
+                'This will clear all local data and sign you out. Are you sure?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { 
+                    text: 'Reset', 
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        // Clear any local storage/cache if needed
+                        await logout();
+                        router.replace('/(auth)/welcome');
+                      } catch (error) {
+                        console.error('Error resetting app:', error);
+                      }
+                    }
+                  }
+                ]
+              );
+            }}
+          >
+            <Text style={styles.resetButtonText}>🔄 Reset App (Dev)</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -822,6 +851,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#9CA3AF',
+  },
+  resetButton: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  resetButtonText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#DC2626',
   },
   modalContainer: {
     flex: 1,
