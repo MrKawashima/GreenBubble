@@ -303,8 +303,8 @@ export default function ChallengesScreen() {
               <View style={styles.filterNotice}>
                 <Ionicons name="information-circle" color="#3B82F6" size={16} />
                 <Text style={styles.filterNoticeText}>
-                  <Text style={styles.filterText}>
-                Completion will be added to your active bubble: <Text style={styles.filterText}>{bubbleNames[user?.activeBubbleId || ''] || 'Unknown'}</Text>.
+                  Completion will be added to your active bubble: {bubbleNames[user?.activeBubbleId || ''] || 'Unknown'}
+                </Text>
               </View>
             )}
             
