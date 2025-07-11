@@ -263,11 +263,11 @@ export default function ChallengesScreen() {
         {/* Bubble Selector */}
         {userBubbles.length > 1 && (
           <Pressable 
-            style={styles.bubbleSelector}
+            style={styles.bubbleFilter}
             onPress={() => setShowBubbleFilter(true)}
           >
-            <View style={styles.bubbleInfo}>
-              <Ionicons name="people" color="#ffffff" size={16} />
+            <View style={styles.filterInfo}>
+              <Ionicons name="filter" color="#ffffff" size={16} />
               <Text style={styles.bubbleName}>
                 {getFilteredBubbleName()}
               </Text>
@@ -675,26 +675,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#111827',
     minHeight: 100,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  submitButton: {
-    backgroundColor: '#10B981',
-    borderRadius: 16,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
-  },
   tipCard: {
     backgroundColor: '#FFFBEB',
     borderRadius: 16,
