@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, T
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { SupabaseService } from '@/services/supabaseService';
 import { Challenge, Bubble, ChallengeCompletion, User } from '@/types';
 import { router } from 'expo-router';
@@ -922,7 +923,6 @@ export default function HomeScreen() {
                     if (Platform.OS === 'web') {
                       await navigator.clipboard.writeText(currentInviteCode);
                     } else {
-                      const { Clipboard } = require('@react-native-clipboard/clipboard');
                       Clipboard.setString(currentInviteCode);
                     }
                     Alert.alert('Copied!', 'Invite code copied to clipboard');
