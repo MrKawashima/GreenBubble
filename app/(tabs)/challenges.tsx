@@ -258,7 +258,7 @@ export default function ChallengesScreen() {
           >
             <View style={styles.filterInfo}>
               <Ionicons name="filter" color="#ffffff" size={16} />
-              <Text style={styles.bubbleName}>
+              <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
                 {getFilteredBubbleName()}
               </Text>
             </View>
