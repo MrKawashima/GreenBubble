@@ -552,26 +552,4 @@ export const SupabaseService = {
       return 'https://images.pexels.com/photos/3735747/pexels-photo-3735747.jpeg?auto=compress&cs=tinysrgb&w=800';
     }
   }
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      
-      const { data, error } = await supabase.storage
-        .from('challenge-photos')
-        .upload(path, blob, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('challenge-photos')
-        .getPublicUrl(data.path);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-  }
 };
