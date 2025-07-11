@@ -355,6 +355,26 @@ export default function HomeScreen() {
     );
   };
 
+  const handleViewInviteCode = async () => {
+    if (!selectedBubbleForSettings) return;
+
+    try {
+      const bubble = await SupabaseService.getBubble(selectedBubbleForSettings);
+      if (bubble?.inviteCode) {
+        Alert.alert(
+          'Invite Code',
+          `Share this code with friends to invite them to join "${bubble.name}":\n\n${bubble.inviteCode}`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Error', 'Could not retrieve invite code for this bubble');
+      }
+    } catch (error) {
+      console.error('Error getting invite code:', error);
+      Alert.alert('Error', 'Failed to retrieve invite code');
+    }
+  };
+
   if (userBubbles.length === 0) {
     return (
       <View style={styles.container}>
