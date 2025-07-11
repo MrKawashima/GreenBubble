@@ -204,6 +204,24 @@ export default function HomeScreen() {
                 <Ionicons name="share-outline" size={20} color="#10B981" />
               </Pressable>
             </View>
+            
+            {/* Additional Bubble Actions */}
+            <View style={styles.bubbleActions}>
+              <Pressable 
+                style={[styles.actionButton, styles.joinButton]}
+                onPress={() => setShowJoinModal(true)}
+              >
+                <Ionicons name="add" size={16} color="#374151" />
+                <Text style={styles.joinButtonText}>Join Another</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.actionButton, styles.createButton]}
+                onPress={() => setShowCreateModal(true)}
+              >
+                <Ionicons name="people" size={16} color="#ffffff" />
+                <Text style={styles.createButtonText}>Create New</Text>
+              </Pressable>
+            </View>
           </View>
         ) : (
           <View style={styles.noBubbleCard}>
@@ -518,13 +536,17 @@ const styles = StyleSheet.create({
   bubbleActions: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: 16,
   },
   actionButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
-    minWidth: 120,
+    flex: 1,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
   },
   joinButton: {
     backgroundColor: '#F3F4F6',
