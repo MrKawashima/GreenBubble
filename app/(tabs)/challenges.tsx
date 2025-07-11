@@ -16,11 +16,33 @@ export default function ChallengesScreen() {
   const [loading, setLoading] = useState(false);
   const [userCompleted, setUserCompleted] = useState(false);
   const [showBubbleSelector, setShowBubbleSelector] = useState(false);
+  const [bubbleNames, setBubbleNames] = useState<Record<string, string>>({});
   const { user, userBubbles, switchActiveBubble } = useAuth();
 
   useEffect(() => {
     loadChallenge();
   }, [user?.activeBubbleId]);
+
+  useEffect(() => {
+    if (userBubbles.length > 0) {
+      loadBubbleNames();
+    }
+  }, [userBubbles]);
+
+  const loadBubbleNames = async () => {
+    try {
+      const names: Record<string, string> = {};
+      for (const userBubble of userBubbles) {
+        const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
+        if (bubble) {
+          names[userBubble.bubbleId] = bubble.name;
+        }
+      }
+      setBubbleNames(names);
+    } catch (error) {
+      console.error('Error loading bubble names:', error);
+    }
+  };
 
   const loadChallenge = async () => {
     try {
@@ -49,6 +71,11 @@ export default function ChallengesScreen() {
     } catch (error) {
       console.error('Error switching bubble:', error);
     }
+  };
+
+  const getFilteredBubbleName = () => {
+    if (!user?.activeBubbleId) return 'No Active Bubble';
+    return bubbleNames[user.activeBubbleId] || activeBubble?.name || 'Loading...';
   };
 
   const pickImage = async () => {
@@ -174,7 +201,7 @@ export default function ChallengesScreen() {
               <View style={styles.bubbleInfo}>
                 <Ionicons name="people" color="#ffffff" size={16} />
                 <Text style={styles.bubbleName}>
-                  {activeBubble?.name || 'Select Bubble'}
+                  {getFilteredBubbleName()}
                 </Text>
               </View>
               <Ionicons name="chevron-down" color="#ffffff" size={16} />
@@ -210,7 +237,7 @@ export default function ChallengesScreen() {
             <View style={styles.bubbleInfo}>
               <Ionicons name="people" color="#ffffff" size={16} />
               <Text style={styles.bubbleName}>
-                {activeBubble?.name || 'Select Bubble'}
+                {getFilteredBubbleName()}
               </Text>
             </View>
             <Ionicons name="chevron-down" color="#ffffff" size={16} />
@@ -350,7 +377,9 @@ export default function ChallengesScreen() {
                     <Ionicons name="people" color="#10B981" size={24} />
                   </View>
                   <View style={styles.bubbleOptionInfo}>
-                    <Text style={styles.bubbleOptionName}>Loading...</Text>
+                    <Text style={styles.bubbleOptionName}>
+                      {bubbleNames[userBubble.bubbleId] || 'Loading...'}
+                    </Text>
                     <Text style={styles.bubbleOptionStats}>
                       {userBubble.points} points • {userBubble.co2Saved}kg CO₂
                     </Text>
