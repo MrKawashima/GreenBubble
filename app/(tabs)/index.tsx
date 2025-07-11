@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/contexts/AuthContext';
+import * as Clipboard from 'expo-clipboard';
 import * as Clipboard from 'expo-clipboard';
 import { SupabaseService } from '@/services/supabaseService';
 import { Challenge, Bubble, ChallengeCompletion, User } from '@/types';
@@ -384,10 +385,16 @@ export default function HomeScreen() {
     try {
       if (Platform.OS === 'web') {
         // For web, copy to clipboard
-        await navigator.clipboard.writeText(shareMessage);
-        Alert.alert('Copied!', 'Invite message copied to clipboard');
+      if (Platform.OS !== 'web') {
+        await Share.share({
+          message: shareMessage,
+          title: 'Join My Green Bubble!',
+        });
       } else {
-        // For mobile, use native sharing
+        // Web fallback - copy to clipboard
+        await Clipboard.setStringAsync(shareMessage);
+        Alert.alert('Copied!', 'Invite message copied to clipboard');
+      }
         const { Share } = require('react-native');
         await Share.share({
           message: shareMessage,
@@ -398,7 +405,7 @@ export default function HomeScreen() {
       console.error('Error sharing invite code:', error);
       Alert.alert('Error', 'Failed to share invite code');
     }
-  };
+        await Clipboard.setStringAsync(shareMessage);
 
   if (userBubbles.length === 0) {
     return (

@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = async (userId: string) => {
     try {
       // Add a small delay on iOS to prevent race conditions
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
