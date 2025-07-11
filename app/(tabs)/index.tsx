@@ -35,8 +35,9 @@ export default function HomeScreen() {
       const activeChallengeData = await SupabaseService.getActiveChallenge();
       
       let bubbleData = null;
-      if (userData?.activeBubbleId) {
-        bubbleData = await SupabaseService.getBubble(userData.activeBubbleId);
+      if (userData?.activeBubbleId || userData?.bubble_id) {
+        const bubbleId = userData.activeBubbleId || userData.bubble_id;
+        bubbleData = await SupabaseService.getBubble(bubbleId);
       }
       
       const completionsData = await SupabaseService.getUserChallengeHistory(user!.id);
@@ -68,13 +69,25 @@ export default function HomeScreen() {
     }
 
     try {
-      await SupabaseService.joinBubble(user!.id, inviteCode.trim());
+      const bubble = await SupabaseService.getBubbleByInviteCode(inviteCode.trim());
+      
+      if (!bubble) {
+        Alert.alert('Error', 'Invalid invite code. Please check and try again.');
+        return;
+      }
+
+      await SupabaseService.joinBubble(bubble.id, user!.id);
       setShowJoinModal(false);
       setInviteCode('');
       await loadData();
       Alert.alert('Success', 'Successfully joined the bubble!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to join bubble. Please check the invite code.');
+      console.error('Error joining bubble:', error);
+      if (error.message?.includes('already a member')) {
+        Alert.alert('Already a Member', 'You are already a member of this bubble.');
+      } else {
+        Alert.alert('Error', 'Failed to join bubble. Please check the invite code.');
+      }
     }
   };
 
@@ -85,11 +98,14 @@ export default function HomeScreen() {
     }
 
     try {
-      await SupabaseService.createBubble({
+      const bubbleId = await SupabaseService.createBubble({
         name: newBubbleName.trim(),
         description: newBubbleDescription.trim(),
-        is_private: isPrivate,
-        created_by: user!.id
+        inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+        members: [user!.id],
+        totalPoints: 0,
+        totalCO2Saved: 0,
+        createdBy: user!.id
       });
       
       setShowCreateModal(false);
@@ -99,6 +115,7 @@ export default function HomeScreen() {
       await loadData();
       Alert.alert('Success', 'Bubble created successfully!');
     } catch (error) {
+      console.error('Error creating bubble:', error);
       Alert.alert('Error', 'Failed to create bubble');
     }
   };
