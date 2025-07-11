@@ -31,12 +31,12 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
-      const user = await SupabaseService.getUser(user!.id);
+      const userData = await SupabaseService.getUser(user!.id);
       const activeChallengeData = await SupabaseService.getActiveChallenge();
       
       let bubbleData = null;
-      if (user?.activeBubbleId) {
-        bubbleData = await SupabaseService.getBubble(user.activeBubbleId);
+      if (userData?.activeBubbleId) {
+        bubbleData = await SupabaseService.getBubble(userData.activeBubbleId);
       }
       
       const completionsData = await SupabaseService.getUserChallengeHistory(user!.id);
