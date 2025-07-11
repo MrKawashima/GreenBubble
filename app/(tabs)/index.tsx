@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Modal, TextInput, Alert, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,9 @@ export default function HomeScreen() {
   const [newBubbleName, setNewBubbleName] = useState('');
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [showInviteCodeModal, setShowInviteCodeModal] = useState(false);
+  const [currentInviteCode, setCurrentInviteCode] = useState('');
+  const [currentBubbleName, setCurrentBubbleName] = useState('');
   const { user, userBubbles, switchActiveBubble, refreshUserBubbles } = useAuth();
 
   const loadData = async () => {
@@ -361,17 +364,38 @@ export default function HomeScreen() {
     try {
       const bubble = await SupabaseService.getBubble(selectedBubbleForSettings);
       if (bubble?.inviteCode) {
-        Alert.alert(
-          'Invite Code',
-          `Share this code with friends to invite them to join "${bubble.name}":\n\n${bubble.inviteCode}`,
-          [{ text: 'OK' }]
-        );
+        setCurrentInviteCode(bubble.inviteCode);
+        setCurrentBubbleName(bubble.name);
+        setShowBubbleSettings(false);
+        setShowInviteCodeModal(true);
       } else {
         Alert.alert('Error', 'Could not retrieve invite code for this bubble');
       }
     } catch (error) {
       console.error('Error getting invite code:', error);
       Alert.alert('Error', 'Failed to retrieve invite code');
+    }
+  };
+
+  const handleShareInviteCode = async () => {
+    const shareMessage = `Join my GreenBubble "${currentBubbleName}"! Use invite code: ${currentInviteCode}`;
+    
+    try {
+      if (Platform.OS === 'web') {
+        // For web, copy to clipboard
+        await navigator.clipboard.writeText(shareMessage);
+        Alert.alert('Copied!', 'Invite message copied to clipboard');
+      } else {
+        // For mobile, use native sharing
+        const { Share } = require('react-native');
+        await Share.share({
+          message: shareMessage,
+          title: `Join ${currentBubbleName} on GreenBubble`,
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing invite code:', error);
+      Alert.alert('Error', 'Failed to share invite code');
     }
   };
 
@@ -850,6 +874,72 @@ export default function HomeScreen() {
               </View>
             ))}
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Invite Code Modal */}
+      <Modal
+        visible={showInviteCodeModal}
+        animationType="fade"
+        transparent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.inviteCodeModalContainer}>
+            <View style={styles.inviteCodeHeader}>
+              <View style={styles.inviteCodeIcon}>
+                <Ionicons name="key" color="#F59E0B" size={32} />
+              </View>
+              <Pressable
+                style={styles.closeButton}
+                onPress={() => setShowInviteCodeModal(false)}
+              >
+                <Ionicons name="close" color="#6B7280" size={20} />
+              </Pressable>
+            </View>
+            
+            <Text style={styles.inviteCodeTitle}>Invite Friends</Text>
+            <Text style={styles.inviteCodeSubtitle}>
+              Share this code to invite friends to join "{currentBubbleName}"
+            </Text>
+            
+            <View style={styles.inviteCodeContainer}>
+              <Text style={styles.inviteCodeText}>{currentInviteCode}</Text>
+            </View>
+            
+            <View style={styles.inviteCodeActions}>
+              <Pressable
+                style={styles.shareButton}
+                onPress={handleShareInviteCode}
+              >
+                <Ionicons name="share" color="#ffffff" size={20} />
+                <Text style={styles.shareButtonText}>Share Code</Text>
+              </Pressable>
+              
+              <Pressable
+                style={styles.copyButton}
+                onPress={async () => {
+                  try {
+                    if (Platform.OS === 'web') {
+                      await navigator.clipboard.writeText(currentInviteCode);
+                    } else {
+                      const { Clipboard } = require('@react-native-clipboard/clipboard');
+                      Clipboard.setString(currentInviteCode);
+                    }
+                    Alert.alert('Copied!', 'Invite code copied to clipboard');
+                  } catch (error) {
+                    Alert.alert('Error', 'Failed to copy invite code');
+                  }
+                }}
+              >
+                <Ionicons name="copy" color="#10B981" size={20} />
+                <Text style={styles.copyButtonText}>Copy Code</Text>
+              </Pressable>
+            </View>
+            
+            <Text style={styles.inviteCodeNote}>
+              💡 Friends can use this code when joining a new bubble in the app
+            </Text>
+          </View>
         </View>
       </Modal>
     </ScrollView>
@@ -1675,5 +1765,117 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
     color: '#10B981',
+  },
+  inviteCodeModalContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    maxWidth: 360,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  inviteCodeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 16,
+  },
+  inviteCodeIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inviteCodeTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  inviteCodeSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  inviteCodeContainer: {
+    backgroundColor: '#F9FAFB',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    marginBottom: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  inviteCodeText: {
+    fontSize: 28,
+    fontFamily: 'Poppins-Bold',
+    color: '#10B981',
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
+  inviteCodeActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+    marginBottom: 20,
+  },
+  shareButton: {
+    flex: 1,
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  shareButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+  },
+  copyButton: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: '#10B981',
+    borderRadius: 16,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  copyButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
+  },
+  inviteCodeNote: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
