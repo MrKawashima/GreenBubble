@@ -31,13 +31,13 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
-      const [challengesData, bubbleData, completionsData] = await Promise.all([
-        SupabaseService.getActiveChallenges(),
+      const [activeChallengeData, bubbleData, completionsData] = await Promise.all([
+        SupabaseService.getActiveChallenge(),
         SupabaseService.getUserBubble(user!.id),
         SupabaseService.getRecentCompletions(user!.id)
       ]);
 
-      setChallenges(challengesData.slice(0, 3)); // Show only 3 featured challenges
+      setChallenges(activeChallengeData ? [activeChallengeData] : []); // Show active challenge
       setCurrentBubble(bubbleData);
       setRecentCompletions(completionsData.slice(0, 5)); // Show last 5 completions
     } catch (error) {
