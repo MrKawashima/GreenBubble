@@ -20,7 +20,6 @@ export default function HomeScreen() {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newBubbleName, setNewBubbleName] = useState('');
   const [showMembersModal, setShowMembersModal] = useState(false);
-  const [bubbleMembers, setBubbleMembers] = useState<User[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const { user, userBubbles, switchActiveBubble, refreshUserBubbles } = useAuth();
 
