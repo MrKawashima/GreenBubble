@@ -184,6 +184,47 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>Ready to make a difference today?</Text>
       </LinearGradient>
 
+      {/* Quick Actions Card */}
+      <View style={styles.section}>
+        <View style={styles.quickActionsCard}>
+          <View style={styles.quickActionsHeader}>
+            <Ionicons name="flash" size={24} color="#10B981" />
+            <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+          </View>
+          <Text style={styles.quickActionsSubtitle}>
+            Expand your green network or start a new community
+          </Text>
+          
+          <View style={styles.quickActionButtons}>
+            <Pressable 
+              style={[styles.quickActionButton, styles.joinQuickButton]}
+              onPress={() => setShowJoinModal(true)}
+            >
+              <View style={styles.quickActionIcon}>
+                <Ionicons name="add-circle" size={20} color="#10B981" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={styles.quickActionTitle}>Join Bubble</Text>
+                <Text style={styles.quickActionDesc}>Enter invite code</Text>
+              </View>
+            </Pressable>
+            
+            <Pressable 
+              style={[styles.quickActionButton, styles.createQuickButton]}
+              onPress={() => setShowCreateModal(true)}
+            >
+              <View style={styles.quickActionIcon}>
+                <Ionicons name="people" size={20} color="#ffffff" />
+              </View>
+              <View style={styles.quickActionContent}>
+                <Text style={[styles.quickActionTitle, styles.createQuickText]}>Create Bubble</Text>
+                <Text style={[styles.quickActionDesc, styles.createQuickText]}>Start new community</Text>
+              </View>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
       {/* Bubble Status */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your Green Bubble</Text>
@@ -204,44 +245,13 @@ export default function HomeScreen() {
                 <Ionicons name="share-outline" size={20} color="#10B981" />
               </Pressable>
             </View>
-            
-            {/* Additional Bubble Actions */}
-            <View style={styles.bubbleActions}>
-              <Pressable 
-                style={[styles.actionButton, styles.joinButton]}
-                onPress={() => setShowJoinModal(true)}
-              >
-                <Ionicons name="add" size={16} color="#374151" />
-                <Text style={styles.joinButtonText}>Join Another</Text>
-              </Pressable>
-              <Pressable 
-                style={[styles.actionButton, styles.createButton]}
-                onPress={() => setShowCreateModal(true)}
-              >
-                <Ionicons name="people" size={16} color="#ffffff" />
-                <Text style={styles.createButtonText}>Create New</Text>
-              </Pressable>
-            </View>
           </View>
         ) : (
           <View style={styles.noBubbleCard}>
             <Ionicons name="people-outline" size={48} color="#9CA3AF" />
             <Text style={styles.noBubbleText}>You're not in a bubble yet</Text>
             <Text style={styles.noBubbleSubtext}>Join or create a bubble to connect with others!</Text>
-            <View style={styles.bubbleActions}>
-              <Pressable 
-                style={[styles.actionButton, styles.joinButton]}
-                onPress={() => setShowJoinModal(true)}
-              >
-                <Text style={styles.joinButtonText}>Join Bubble</Text>
-              </Pressable>
-              <Pressable 
-                style={[styles.actionButton, styles.createButton]}
-                onPress={() => setShowCreateModal(true)}
-              >
-                <Text style={styles.createButtonText}>Create Bubble</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.noBubbleAction}>Use the Quick Actions above to get started!</Text>
           </View>
         )}
       </View>
@@ -531,7 +541,83 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
+  },
+  noBubbleAction: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  quickActionsCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  quickActionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quickActionsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginLeft: 8,
+  },
+  quickActionsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 20,
+  },
+  quickActionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  quickActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  joinQuickButton: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  createQuickButton: {
+    backgroundColor: '#10B981',
+  },
+  quickActionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionContent: {
+    flex: 1,
+  },
+  quickActionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  quickActionDesc: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  createQuickText: {
+    color: '#ffffff',
   },
   bubbleActions: {
     flexDirection: 'row',
