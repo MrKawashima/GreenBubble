@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Modal, Animated } from 'react-native';
+import { Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { BadgeService, LEVELS } from '@/services/badgeService';
 import { Badge, Level } from '@/types';
+import { SupabaseService } from '@/services/supabaseService';
 
 export default function ProfileScreen() {
   const { user, userBubbles, logout, refreshUserBubbles } = useAuth();
