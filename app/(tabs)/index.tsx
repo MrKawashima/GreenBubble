@@ -509,11 +509,7 @@ export default function HomeScreen() {
             <Pressable
               style={styles.settingsOption}
               onPress={() => {
-                const bubble = userBubbles.find(ub => ub.bubbleId === selectedBubbleForSettings);
-                if (bubble) {
-                  // We'll need to get the invite code from the bubble data
-                  Alert.alert('Invite Code', 'Feature coming soon - you\'ll be able to view and share the invite code here');
-                }
+                handleViewInviteCode();
               }}
             >
               <View style={styles.settingsOptionIcon}>
