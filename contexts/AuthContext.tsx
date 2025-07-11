@@ -54,6 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (!mounted.current) return;
         
+        // Handle refresh token errors by clearing invalid session
+        if (event === 'TOKEN_REFRESHED') {
+          // Token was successfully refreshed, continue normally
+        } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_ERROR') {
+          // Clear invalid session data
+          setSession(null);
+          setUser(null);
+          setUserBubbles([]);
+          setAuthLoading(false);
+          return;
+        }
+        
         setSession(session);
         
         if (session?.user) {
