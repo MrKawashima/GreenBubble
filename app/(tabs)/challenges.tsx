@@ -264,7 +264,7 @@ export default function ChallengesScreen() {
         {userBubbles.length > 1 && (
           <Pressable 
             style={styles.bubbleSelector}
-            onPress={() => setShowBubbleSelector(true)}
+            onPress={() => setShowBubbleFilter(true)}
           >
             <View style={styles.bubbleInfo}>
               <Ionicons name="people" color="#ffffff" size={16} />
