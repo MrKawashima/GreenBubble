@@ -152,7 +152,32 @@ export const SupabaseService = {
       throw new Error('You do not have permission to delete this bubble');
     }
 
-    // Delete the bubble (cascade will handle related records)
+    // Delete related records first to avoid foreign key constraints
+    // Delete user_bubbles entries
+    const { error: userBubblesError } = await supabase
+      .from('user_bubbles')
+      .delete()
+      .eq('bubble_id', bubbleId);
+
+    if (userBubblesError) throw userBubblesError;
+
+    // Delete challenge_completions entries
+    const { error: completionsError } = await supabase
+      .from('challenge_completions')
+      .delete()
+      .eq('bubble_id', bubbleId);
+
+    if (completionsError) throw completionsError;
+
+    // Update users who have this as their active bubble
+    const { error: usersError } = await supabase
+      .from('users')
+      .update({ bubble_id: null })
+      .eq('bubble_id', bubbleId);
+
+    if (usersError) throw usersError;
+
+    // Finally delete the bubble
     const { error } = await supabase
       .from('bubbles')
       .delete()
