@@ -15,13 +15,14 @@ export default function ChallengesScreen() {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [userCompleted, setUserCompleted] = useState(false);
-  const [showBubbleSelector, setShowBubbleSelector] = useState(false);
+  const [showBubbleFilter, setShowBubbleFilter] = useState(false);
+  const [selectedBubbleFilter, setSelectedBubbleFilter] = useState<string | null>(null);
   const [bubbleNames, setBubbleNames] = useState<Record<string, string>>({});
   const { user, userBubbles, switchActiveBubble } = useAuth();
 
   useEffect(() => {
     loadChallenge();
-  }, [user?.activeBubbleId]);
+  }, [user?.activeBubbleId, selectedBubbleFilter]);
 
   useEffect(() => {
     if (userBubbles.length > 0) {
@@ -49,33 +50,46 @@ export default function ChallengesScreen() {
       const challenge = await SupabaseService.getActiveChallenge();
       setActiveChallenge(challenge);
 
-      if (challenge && user?.activeBubbleId) {
-        const [bubbleData, completions] = await Promise.all([
-          SupabaseService.getBubble(user.activeBubbleId),
-          SupabaseService.getChallengeCompletions(user.activeBubbleId, challenge.id)
-        ]);
+      if (challenge && user?.id) {
+        // If filtering by specific bubble, use that bubble, otherwise use active bubble
+        const targetBubbleId = selectedBubbleFilter || user.activeBubbleId;
         
-        setActiveBubble(bubbleData);
-        setUserCompleted(completions.some(c => c.userId === user.id));
+        if (targetBubbleId) {
+          const [bubbleData, completions] = await Promise.all([
+            SupabaseService.getBubble(targetBubbleId),
+            selectedBubbleFilter 
+              ? SupabaseService.getChallengeCompletions(selectedBubbleFilter, challenge.id)
+              : SupabaseService.getChallengeCompletions(user.activeBubbleId!, challenge.id)
+          ]);
+          
+          setActiveBubble(bubbleData);
+          
+          // Check if user completed in the filtered bubble or any bubble
+          if (selectedBubbleFilter) {
+            setUserCompleted(completions.some(c => c.userId === user.id));
+          } else {
+            // Check across all user's bubbles
+            let hasCompleted = false;
+            for (const userBubble of userBubbles) {
+              const bubbleCompletions = await SupabaseService.getChallengeCompletions(userBubble.bubbleId, challenge.id);
+              if (bubbleCompletions.some(c => c.userId === user.id)) {
+                hasCompleted = true;
+                break;
+              }
+            }
+            setUserCompleted(hasCompleted);
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading challenge:', error);
     }
   };
 
-  const handleSwitchBubble = async (bubbleId: string) => {
-    try {
-      await switchActiveBubble(bubbleId);
-      setShowBubbleSelector(false);
-      await loadChallenge();
-    } catch (error) {
-      console.error('Error switching bubble:', error);
-    }
-  };
 
   const getFilteredBubbleName = () => {
-    if (!user?.activeBubbleId) return 'No Active Bubble';
-    return bubbleNames[user.activeBubbleId] || activeBubble?.name || 'Loading...';
+    if (!selectedBubbleFilter) return 'All Bubbles';
+    return bubbleNames[selectedBubbleFilter] || 'Unknown Bubble';
   };
 
   const pickImage = async () => {
@@ -118,12 +132,15 @@ export default function ChallengesScreen() {
   };
 
   const handleCompleteChallenge = async () => {
-    if (!activeChallenge || !user?.activeBubbleId) return;
+    if (!activeChallenge || !user?.activeBubbleId || !user?.id) return;
 
     if (!selectedImage && !comment.trim()) {
       Alert.alert('Required', 'Please add a photo or comment to complete the challenge');
       return;
     }
+
+    // Always complete in the user's active bubble, regardless of filter
+    const completionBubbleId = user.activeBubbleId;
 
     setLoading(true);
     try {
@@ -139,7 +156,7 @@ export default function ChallengesScreen() {
       await SupabaseService.completeChallenge({
         userId: user.id,
         challengeId: activeChallenge.id,
-        bubbleId: user.activeBubbleId,
+        bubbleId: completionBubbleId,
         photo: photoUrl,
         comment: comment.trim() || undefined,
         points: activeChallenge.points,
@@ -155,6 +172,9 @@ export default function ChallengesScreen() {
       setUserCompleted(true);
       setSelectedImage(null);
       setComment('');
+      
+      // Reload challenge data to reflect completion
+      await loadChallenge();
     } catch (error) {
       Alert.alert('Error', 'Failed to complete challenge. Please try again.');
     } finally {
@@ -170,6 +190,20 @@ export default function ChallengesScreen() {
           style={styles.header}
         >
           <Text style={styles.headerTitle}>Challenges</Text>
+          
+          {/* Bubble Filter */}
+          {userBubbles.length > 1 && (
+            <Pressable 
+              style={styles.bubbleFilter}
+              onPress={() => setShowBubbleFilter(true)}
+            >
+              <View style={styles.filterInfo}>
+                <Ionicons name="filter" color="#ffffff" size={16} />
+                <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
+              </View>
+              <Ionicons name="chevron-down" color="#ffffff" size={16} />
+            </Pressable>
+          )}
         </LinearGradient>
         
         <View style={styles.emptyContainer}>
@@ -192,17 +226,15 @@ export default function ChallengesScreen() {
         >
           <Text style={styles.headerTitle}>Challenges</Text>
           
-          {/* Bubble Selector */}
+          {/* Bubble Filter */}
           {userBubbles.length > 1 && (
             <Pressable 
-              style={styles.bubbleSelector}
-              onPress={() => setShowBubbleSelector(true)}
+              style={styles.bubbleFilter}
+              onPress={() => setShowBubbleFilter(true)}
             >
-              <View style={styles.bubbleInfo}>
-                <Ionicons name="people" color="#ffffff" size={16} />
-                <Text style={styles.bubbleName}>
-                  {getFilteredBubbleName()}
-                </Text>
+              <View style={styles.filterInfo}>
+                <Ionicons name="filter" color="#ffffff" size={16} />
+                <Text style={styles.filterText}>{getFilteredBubbleName()}</Text>
               </View>
               <Ionicons name="chevron-down" color="#ffffff" size={16} />
             </Pressable>
@@ -277,6 +309,16 @@ export default function ChallengesScreen() {
           <View style={styles.completionCard}>
             <Text style={styles.completionTitle}>Complete the Challenge</Text>
             
+            {selectedBubbleFilter && (
+              <View style={styles.filterNotice}>
+                <Ionicons name="information-circle" color="#3B82F6" size={16} />
+                <Text style={styles.filterNoticeText}>
+                  Viewing {bubbleNames[selectedBubbleFilter] || 'filtered bubble'}. 
+                  Completion will be added to your active bubble: {bubbleNames[user?.activeBubbleId || ''] || 'Unknown'}.
+                </Text>
+              </View>
+            )}
+            
             {selectedImage ? (
               <View style={styles.imageContainer}>
                 <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
@@ -345,47 +387,68 @@ export default function ChallengesScreen() {
         </View>
       </View>
 
-      {/* Bubble Selector Modal */}
+      {/* Bubble Filter Modal */}
       <Modal
-        visible={showBubbleSelector}
+        visible={showBubbleFilter}
         animationType="slide"
         presentationStyle="pageSheet"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Bubble</Text>
+            <Text style={styles.modalTitle}>Filter by Bubble</Text>
             <Pressable
               style={styles.closeButton}
-              onPress={() => setShowBubbleSelector(false)}
+              onPress={() => setShowBubbleFilter(false)}
             >
               <Ionicons name="close" color="#6B7280" size={24} />
             </Pressable>
           </View>
 
           <ScrollView style={styles.modalContent}>
+            <Pressable
+              style={[
+                styles.filterOption,
+                !selectedBubbleFilter && styles.activeFilterOption
+              ]}
+              onPress={() => {
+                setSelectedBubbleFilter(null);
+                setShowBubbleFilter(false);
+              }}
+            >
+              <View style={styles.filterOptionContent}>
+                <Text style={styles.filterOptionText}>All Bubbles</Text>
+              </View>
+              {!selectedBubbleFilter && (
+                <Ionicons name="checkmark-circle" color="#10B981" size={20} />
+              )}
+            </Pressable>
+
             {userBubbles.map((userBubble) => (
               <Pressable
                 key={userBubble.bubbleId}
                 style={[
-                  styles.bubbleOption,
-                  user?.activeBubbleId === userBubble.bubbleId && styles.activeBubbleOption
+                  styles.filterOption,
+                  selectedBubbleFilter === userBubble.bubbleId && styles.activeFilterOption
                 ]}
-                onPress={() => handleSwitchBubble(userBubble.bubbleId)}
+                onPress={() => {
+                  setSelectedBubbleFilter(userBubble.bubbleId);
+                  setShowBubbleFilter(false);
+                }}
               >
-                <View style={styles.bubbleOptionContent}>
-                  <View style={styles.bubbleOptionIcon}>
+                <View style={styles.filterOptionContent}>
+                  <View style={styles.filterOptionIcon}>
                     <Ionicons name="people" color="#10B981" size={24} />
                   </View>
-                  <View style={styles.bubbleOptionInfo}>
-                    <Text style={styles.bubbleOptionName}>
+                  <View style={styles.filterOptionInfo}>
+                    <Text style={styles.filterOptionText}>
                       {bubbleNames[userBubble.bubbleId] || 'Loading...'}
                     </Text>
-                    <Text style={styles.bubbleOptionStats}>
+                    <Text style={styles.filterOptionStats}>
                       {userBubble.points} points • {userBubble.co2Saved}kg CO₂
                     </Text>
                   </View>
                 </View>
-                {user?.activeBubbleId === userBubble.bubbleId && (
+                {selectedBubbleFilter === userBubble.bubbleId && (
                   <Ionicons name="checkmark-circle" color="#10B981" size={20} />
                 )}
               </Pressable>
@@ -412,7 +475,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     color: '#ffffff',
   },
-  bubbleSelector: {
+  bubbleFilter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -422,12 +485,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 16,
   },
-  bubbleInfo: {
+  filterInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  bubbleName: {
+  filterText: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
@@ -529,6 +592,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
     color: '#111827',
     marginBottom: 24,
+  },
+  filterNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 8,
+  },
+  filterNoticeText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#1E40AF',
+    lineHeight: 20,
   },
   photoSection: {
     marginBottom: 24,
@@ -688,7 +767,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
-  bubbleOption: {
+  filterOption: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
@@ -702,16 +781,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  activeBubbleOption: {
+  activeFilterOption: {
     borderWidth: 2,
     borderColor: '#10B981',
   },
-  bubbleOptionContent: {
+  filterOptionContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  bubbleOptionIcon: {
+  filterOptionIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -720,16 +799,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  bubbleOptionInfo: {
+  filterOptionInfo: {
     flex: 1,
   },
-  bubbleOptionName: {
+  filterOptionText: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#111827',
     marginBottom: 4,
   },
-  bubbleOptionStats: {
+  filterOptionStats: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
