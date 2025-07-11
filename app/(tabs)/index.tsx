@@ -275,7 +275,7 @@ export default function HomeScreen() {
             onPress={() => setShowBubbleSelector(true)}
           >
             <View style={styles.bubbleInfo}>
-              <Ionicons name="people" color="#10B981" size={20} />
+              <Ionicons name="people" color="#ffffff" size={20} />
               <Text style={styles.bubbleName}>
                 {activeBubble?.name || 'Select Bubble'}
               </Text>
@@ -400,7 +400,7 @@ export default function HomeScreen() {
               style={styles.closeButton}
               onPress={() => setShowBubbleSelector(false)}
             >
-              <Ionicons name="checkmark-circle" color="#ffffff" size={20} />
+              <Ionicons name="checkmark-circle" color="#10B981" size={20} />
             </Pressable>
           </View>
 
