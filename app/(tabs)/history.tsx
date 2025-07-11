@@ -37,6 +37,20 @@ export default function HistoryScreen() {
         selectedBubbleFilter || undefined
       );
 
+      // Load bubble names for display
+      const bubbleNames: Record<string, string> = {};
+      for (const userBubble of userBubbles) {
+        try {
+          const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
+          if (bubble) {
+            bubbleNames[userBubble.bubbleId] = bubble.name;
+          }
+        } catch (error) {
+          console.error('Error loading bubble name:', error);
+          bubbleNames[userBubble.bubbleId] = `Bubble ${userBubble.bubbleId.slice(0, 8)}`;
+        }
+      }
+
       // For demo purposes, we'll create some mock history data with proper bubble context
       const mockHistory: HistoryItem[] = [];
       
@@ -55,7 +69,7 @@ export default function HistoryScreen() {
             co2Saved: 2.5,
             challengeTitle: 'Bike to Work Day',
             challengeCategory: 'transport',
-            bubbleName: `Bubble ${userBubble.bubbleId.slice(0, 8)}`
+            bubbleName: bubbleNames[userBubble.bubbleId] || `Bubble ${userBubble.bubbleId.slice(0, 8)}`
           },
           {
             id: `${userBubble.bubbleId}-2`,
@@ -69,7 +83,7 @@ export default function HistoryScreen() {
             co2Saved: 1.8,
             challengeTitle: 'Meatless Monday',
             challengeCategory: 'food',
-            bubbleName: `Bubble ${userBubble.bubbleId.slice(0, 8)}`
+            bubbleName: bubbleNames[userBubble.bubbleId] || `Bubble ${userBubble.bubbleId.slice(0, 8)}`
           }
         ];
 
@@ -132,6 +146,13 @@ export default function HistoryScreen() {
 
   const getFilteredBubbleName = () => {
     if (!selectedBubbleFilter) return 'All Bubbles';
+    // Find the bubble name from historyItems since we load them there
+    const historyItem = historyItems.find(item => item.bubbleId === selectedBubbleFilter);
+    if (historyItem?.bubbleName) {
+      return historyItem.bubbleName;
+    }
+    
+    // Fallback to bubble ID slice
     const bubble = userBubbles.find(ub => ub.bubbleId === selectedBubbleFilter);
     return bubble ? `Bubble ${bubble.bubbleId.slice(0, 8)}` : 'Unknown Bubble';
   };
@@ -341,7 +362,7 @@ export default function HistoryScreen() {
                     <Ionicons name="people" color="#10B981" size={20} />
                   </View>
                   <Text style={styles.filterOptionText}>
-                    Bubble {userBubble.bubbleId.slice(0, 8)}
+                    {historyItems.find(item => item.bubbleId === userBubble.bubbleId)?.bubbleName || `Bubble ${userBubble.bubbleId.slice(0, 8)}`}
                   </Text>
                 </View>
                 {selectedBubbleFilter === userBubble.bubbleId && (
