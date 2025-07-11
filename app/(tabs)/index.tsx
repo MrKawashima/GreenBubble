@@ -191,35 +191,22 @@ export default function HomeScreen() {
             <Ionicons name="flash" size={24} color="#10B981" />
             <Text style={styles.quickActionsTitle}>Quick Actions</Text>
           </View>
-          <Text style={styles.quickActionsSubtitle}>
-            Expand your green network or start a new community
-          </Text>
           
           <View style={styles.quickActionButtons}>
             <Pressable 
               style={[styles.quickActionButton, styles.joinQuickButton]}
               onPress={() => setShowJoinModal(true)}
             >
-              <View style={styles.quickActionIcon}>
-                <Ionicons name="add-circle" size={20} color="#10B981" />
-              </View>
-              <View style={styles.quickActionContent}>
-                <Text style={styles.quickActionTitle}>Join Bubble</Text>
-                <Text style={styles.quickActionDesc}>Enter invite code</Text>
-              </View>
+              <Ionicons name="add-circle" size={18} color="#10B981" />
+              <Text style={styles.quickActionTitle}>Join Bubble</Text>
             </Pressable>
             
             <Pressable 
               style={[styles.quickActionButton, styles.createQuickButton]}
               onPress={() => setShowCreateModal(true)}
             >
-              <View style={styles.quickActionIcon}>
-                <Ionicons name="people" size={20} color="#ffffff" />
-              </View>
-              <View style={styles.quickActionContent}>
-                <Text style={[styles.quickActionTitle, styles.createQuickText]}>Create Bubble</Text>
-                <Text style={[styles.quickActionDesc, styles.createQuickText]}>Start new community</Text>
-              </View>
+              <Ionicons name="people" size={18} color="#ffffff" />
+              <Text style={[styles.quickActionTitle, styles.createQuickText]}>Create Bubble</Text>
             </Pressable>
           </View>
         </View>
@@ -552,7 +539,7 @@ const styles = StyleSheet.create({
   quickActionsCard: {
     backgroundColor: 'white',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -562,18 +549,13 @@ const styles = StyleSheet.create({
   quickActionsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   quickActionsTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1F2937',
     marginLeft: 8,
-  },
-  quickActionsSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
   },
   quickActionButtons: {
     flexDirection: 'row',
@@ -583,9 +565,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'center',
+    padding: 12,
     borderRadius: 12,
-    gap: 12,
+    gap: 8,
   },
   joinQuickButton: {
     backgroundColor: '#F0FDF4',
@@ -595,26 +578,10 @@ const styles = StyleSheet.create({
   createQuickButton: {
     backgroundColor: '#10B981',
   },
-  quickActionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionContent: {
-    flex: 1,
-  },
   quickActionTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#1F2937',
-    marginBottom: 2,
-  },
-  quickActionDesc: {
-    fontSize: 12,
-    color: '#6B7280',
   },
   createQuickText: {
     color: '#ffffff',
