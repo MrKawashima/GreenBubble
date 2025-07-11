@@ -86,7 +86,6 @@ export default function ChallengesScreen() {
     }
   };
 
-
   const getFilteredBubbleName = () => {
     if (!selectedBubbleFilter) return 'All Bubbles';
     return bubbleNames[selectedBubbleFilter] || 'Unknown Bubble';
@@ -675,6 +674,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#111827',
     minHeight: 100,
+  },
   tipCard: {
     backgroundColor: '#FFFBEB',
     borderRadius: 16,
@@ -793,4 +793,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  }
 });
