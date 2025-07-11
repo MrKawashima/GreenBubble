@@ -280,7 +280,7 @@ export default function HomeScreen() {
                 {activeBubble?.name || 'Select Bubble'}
               </Text>
             </View>
-            <Ionicons name="chevron-down" color="#ffffff" size={20} />
+            <Ionicons name="chevron-down" color="#10B981" size={20} />
           </Pressable>
           
           {userBubbles.length > 1 && (
