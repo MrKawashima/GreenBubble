@@ -51,7 +51,6 @@ export default function ChallengesScreen() {
       setActiveChallenge(challenge);
 
       if (challenge && user?.id) {
-        // If filtering by specific bubble, use that bubble, otherwise use active bubble
         const targetBubbleId = selectedBubbleFilter || user.activeBubbleId;
         
         if (targetBubbleId) {
@@ -64,11 +63,9 @@ export default function ChallengesScreen() {
           
           setActiveBubble(bubbleData);
           
-          // Check if user completed in the filtered bubble or any bubble
           if (selectedBubbleFilter) {
             setUserCompleted(completions.some(c => c.userId === user.id));
           } else {
-            // Check across all user's bubbles
             let hasCompleted = false;
             for (const userBubble of userBubbles) {
               const bubbleCompletions = await SupabaseService.getChallengeCompletions(userBubble.bubbleId, challenge.id);
@@ -138,7 +135,6 @@ export default function ChallengesScreen() {
       return;
     }
 
-    // Always complete in the user's active bubble, regardless of filter
     const completionBubbleId = user.activeBubbleId;
 
     setLoading(true);
@@ -162,7 +158,6 @@ export default function ChallengesScreen() {
         co2Saved: activeChallenge.co2Impact
       });
 
-      // Update user points
       await SupabaseService.updateUser(user.id, {
         points: (user.points || 0) + activeChallenge.points
       });
@@ -172,7 +167,6 @@ export default function ChallengesScreen() {
       setSelectedImage(null);
       setComment('');
       
-      // Reload challenge data to reflect completion
       await loadChallenge();
     } catch (error) {
       Alert.alert('Error', 'Failed to complete challenge. Please try again.');
@@ -190,7 +184,6 @@ export default function ChallengesScreen() {
         >
           <Text style={styles.headerTitle}>Challenges</Text>
           
-          {/* Bubble Filter */}
           {userBubbles.length > 1 && (
             <Pressable 
               style={styles.bubbleFilter}
@@ -225,7 +218,6 @@ export default function ChallengesScreen() {
         >
           <Text style={styles.headerTitle}>Challenges</Text>
           
-          {/* Bubble Filter */}
           {userBubbles.length > 1 && (
             <Pressable 
               style={styles.bubbleFilter}
@@ -259,7 +251,6 @@ export default function ChallengesScreen() {
       >
         <Text style={styles.headerTitle}>This Week's Challenge</Text>
         
-        {/* Bubble Selector */}
         {userBubbles.length > 1 && (
           <Pressable 
             style={styles.bubbleFilter}
@@ -312,8 +303,9 @@ export default function ChallengesScreen() {
               <View style={styles.filterNotice}>
                 <Ionicons name="information-circle" color="#3B82F6" size={16} />
                 <Text style={styles.filterNoticeText}>
-                <Text style={styles.filterText}>
-                  Completion will be added to your active bubble: {bubbleNames[user?.activeBubbleId || ''] || 'Unknown'}.
+                  <Text style={styles.filterText}>
+                    Completion will be added to your active bubble: {bubbleNames[user?.activeBubbleId || ''] || 'Unknown'}.
+                  </Text>
                 </Text>
               </View>
             )}
@@ -386,7 +378,6 @@ export default function ChallengesScreen() {
         </View>
       </View>
 
-      {/* Bubble Filter Modal */}
       <Modal
         visible={showBubbleFilter}
         animationType="slide"
