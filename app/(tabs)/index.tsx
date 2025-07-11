@@ -275,12 +275,12 @@ export default function HomeScreen() {
             onPress={() => setShowBubbleSelector(true)}
           >
             <View style={styles.bubbleInfo}>
-              <Ionicons name="people" color="#ffffff" size={20} />
+              <Ionicons name="people" color="#10B981" size={20} />
               <Text style={styles.bubbleName}>
                 {activeBubble?.name || 'Select Bubble'}
               </Text>
             </View>
-            <Ionicons name="chevron-down" color="#10B981" size={20} />
+            <Ionicons name="chevron-down" color="#ffffff" size={20} />
           </Pressable>
           
           {userBubbles.length > 1 && (
