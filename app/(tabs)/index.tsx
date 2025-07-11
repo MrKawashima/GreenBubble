@@ -10,9 +10,9 @@ import { router } from 'expo-router';
 export default function HomeScreen() {
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [activeBubble, setActiveBubble] = useState<Bubble | null>(null);
-  const [completions, setCompletions] = useState<ChallengeCompletion[]>([]);
+  const [bubbleMembers, setBubbleMembers] = useState<User[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [userCompleted, setUserCompleted] = useState(false);
   const [showBubbleSelector, setShowBubbleSelector] = useState(false);
   const [bubbleNames, setBubbleNames] = useState<Record<string, string>>({});
   const [showBubbleSettings, setShowBubbleSettings] = useState(false);
@@ -25,6 +25,106 @@ export default function HomeScreen() {
   const { user, userBubbles, switchActiveBubble, refreshUserBubbles } = useAuth();
 
   const loadData = async () => {
+    if (!user?.activeBubbleId || userBubbles.length === 0) return;
+
+    try {
+      const bubbleData = await SupabaseService.getBubble(user.activeBubbleId);
+      setActiveBubble(bubbleData);
+
+      if (bubbleData) {
+        // Load bubble members
+        const members = await SupabaseService.getBubbleMembers(bubbleData.id);
+        setBubbleMembers(members);
+
+        // Create some mock recent activity for demo
+        const mockActivity = [
+          {
+            id: '1',
+            type: 'challenge_completed',
+            userName: members[0]?.name || 'Someone',
+            action: 'completed a transport challenge',
+            time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+            points: 50
+          },
+          {
+            id: '2',
+            type: 'member_joined',
+            userName: members[1]?.name || 'Someone',
+            action: 'joined the bubble',
+            time: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+          },
+          {
+            id: '3',
+            type: 'challenge_completed',
+            userName: user.name,
+            action: 'completed a food challenge',
+            time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+            points: 30
+          }
+        ];
+        setRecentActivity(mockActivity);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
+
+  const loadBubbleOverview = async () => {
+    try {
+      // Load overview data for all user's bubbles
+      const bubbleData = await Promise.all(
+        userBubbles.map(async (userBubble) => {
+          const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
+          return { userBubble, bubble };
+        })
+      );
+      
+      // Update bubble names
+      const names: Record<string, string> = {};
+      bubbleData.forEach(({ bubble }) => {
+        if (bubble) {
+          names[bubble.id] = bubble.name;
+        }
+      });
+      setBubbleNames(names);
+    } catch (error) {
+      console.error('Error loading bubble overview:', error);
+    }
+  };
+
+  const loadBubbleNames = async () => {
+    try {
+      const names: Record<string, string> = {};
+      for (const userBubble of userBubbles) {
+        const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
+        if (bubble) {
+          names[userBubble.bubbleId] = bubble.name;
+        }
+      }
+      setBubbleNames(names);
+    } catch (error) {
+      console.error('Error loading bubble names:', error);
+    }
+  };
+
+  const loadActiveBubbleData = async () => {
+    if (!user?.activeBubbleId) return;
+
+    try {
+      const bubbleData = await SupabaseService.getBubble(user.activeBubbleId);
+      setActiveBubble(bubbleData);
+
+      if (bubbleData) {
+        // Load bubble members
+        const members = await SupabaseService.getBubbleMembers(bubbleData.id);
+        setBubbleMembers(members);
+      }
+    } catch (error) {
+      console.error('Error loading active bubble data:', error);
+    }
+  };
+
+  const loadOldData = async () => {
     if (!user?.activeBubbleId) return;
 
     try {
@@ -49,22 +149,9 @@ export default function HomeScreen() {
     }
   };
 
-  const loadBubbleNames = async () => {
-    try {
-      const names: Record<string, string> = {};
-      for (const userBubble of userBubbles) {
-        const bubble = await SupabaseService.getBubble(userBubble.bubbleId);
-        if (bubble) {
-          names[userBubble.bubbleId] = bubble.name;
-        }
-      }
-      setBubbleNames(names);
-    } catch (error) {
-      console.error('Error loading bubble names:', error);
-    }
-  };
   useEffect(() => {
     loadData();
+    loadBubbleOverview();
   }, [user?.activeBubbleId]);
 
   useEffect(() => {
@@ -72,14 +159,49 @@ export default function HomeScreen() {
       loadBubbleNames();
     }
   }, [userBubbles]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadData(), refreshUserBubbles()]);
+    await Promise.all([loadData(), loadBubbleOverview(), refreshUserBubbles()]);
     setRefreshing(false);
   };
 
-  const handleCompleteChallenge = () => {
+  const handleViewChallenges = () => {
     router.push('/(tabs)/challenges');
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    return `${diffDays}d ago`;
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'challenge_completed':
+        return 'checkmark-circle';
+      case 'member_joined':
+        return 'person-add';
+      default:
+        return 'flash';
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'challenge_completed':
+        return '#10B981';
+      case 'member_joined':
+        return '#3B82F6';
+      default:
+        return '#6B7280';
+    }
   };
 
   const handleSwitchBubble = async (bubbleId: string) => {
@@ -87,6 +209,7 @@ export default function HomeScreen() {
       await switchActiveBubble(bubbleId);
       setShowBubbleSelector(false);
       await loadData();
+      await loadActiveBubbleData();
     } catch (error) {
       console.error('Error switching bubble:', error);
     }
@@ -292,94 +415,167 @@ export default function HomeScreen() {
       </LinearGradient>
 
       <View style={styles.content}>
-        {activeChallenge && activeBubble ? (
-          <View style={styles.challengeCard}>
-            <View style={styles.challengeHeader}>
-              <Text style={styles.challengeTitle}>This Week's Challenge</Text>
-              <View style={styles.challengeBadge}>
-                <Ionicons name="leaf" color="#10B981" size={16} />
-                <Text style={styles.challengePoints}>+{activeChallenge.points} pts</Text>
+        {/* Quick Actions */}
+        <View style={styles.quickActionsCard}>
+          <Text style={styles.cardTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            <Pressable style={styles.quickActionButton} onPress={handleViewChallenges}>
+              <View style={styles.quickActionIcon}>
+                <Ionicons name="trophy" color="#F59E0B" size={24} />
               </View>
-            </View>
+              <Text style={styles.quickActionText}>View Challenges</Text>
+            </Pressable>
             
-            <Text style={styles.challengeName}>{activeChallenge.title}</Text>
-            <Text style={styles.challengeDescription}>{activeChallenge.description}</Text>
+            <Pressable style={styles.quickActionButton} onPress={() => router.push('/(tabs)/progress')}>
+              <View style={styles.quickActionIcon}>
+                <Ionicons name="trending-up" color="#3B82F6" size={24} />
+              </View>
+              <Text style={styles.quickActionText}>Your Progress</Text>
+            </Pressable>
             
-            <View style={styles.challengeStats}>
-              <View style={styles.stat}>
-                <Text style={styles.statNumber}>{completions.length}</Text>
-                <Text style={styles.statLabel}>Completed</Text>
+            <Pressable style={styles.quickActionButton} onPress={() => router.push('/(tabs)/history')}>
+              <View style={styles.quickActionIcon}>
+                <Ionicons name="time" color="#8B5CF6" size={24} />
               </View>
-              <View style={styles.stat}>
-                <Text style={styles.statNumber}>{activeBubble.members.length}</Text>
-                <Text style={styles.statLabel}>Members</Text>
+              <Text style={styles.quickActionText}>History</Text>
+            </Pressable>
+            
+            <Pressable style={styles.quickActionButton} onPress={handleJoinNewBubble}>
+              <View style={styles.quickActionIcon}>
+                <Ionicons name="add" color="#10B981" size={24} />
               </View>
-              <View style={styles.stat}>
-                <Text style={styles.statNumber}>{activeChallenge.co2Impact}kg</Text>
-                <Text style={styles.statLabel}>CO₂ Saved</Text>
-              </View>
-            </View>
+              <Text style={styles.quickActionText}>Join Bubble</Text>
+            </Pressable>
+          </View>
+        </View>
 
-            {userCompleted ? (
-              <View style={styles.completedButton}>
-                <Ionicons name="checkmark-circle" color="#10B981" size={20} />
-                <Text style={styles.completedButtonText}>Challenge Completed!</Text>
+        {/* Active Bubble Overview */}
+        {activeBubble && (
+          <View style={styles.activeBubbleCard}>
+            <View style={styles.bubbleCardHeader}>
+              <View style={styles.bubbleIconLarge}>
+                <Ionicons name="people" color="#10B981" size={28} />
               </View>
-            ) : (
-              <Pressable 
-                style={styles.completeButton}
-                onPress={handleCompleteChallenge}
-              >
-                <Ionicons name="camera" color="#ffffff" size={20} />
-                <Text style={styles.completeButtonText}>Complete Challenge</Text>
-              </Pressable>
+              <View style={styles.bubbleHeaderInfo}>
+                <Text style={styles.bubbleCardTitle}>{activeBubble.name}</Text>
+                <Text style={styles.bubbleCardSubtitle}>
+                  {activeBubble.members.length} members • Active bubble
+                </Text>
+              </View>
+            </View>
+            
+            <View style={styles.bubbleStatsRow}>
+              <View style={styles.bubbleStatItem}>
+                <View style={styles.bubbleStatIcon}>
+                  <Ionicons name="trophy" color="#F59E0B" size={20} />
+                </View>
+                <Text style={styles.bubbleStatNumber}>{activeBubble.totalPoints}</Text>
+                <Text style={styles.bubbleStatLabel}>Total Points</Text>
+              </View>
+              
+              <View style={styles.bubbleStatItem}>
+                <View style={styles.bubbleStatIcon}>
+                  <Ionicons name="leaf" color="#10B981" size={20} />
+                </View>
+                <Text style={styles.bubbleStatNumber}>{activeBubble.totalCO2Saved}kg</Text>
+                <Text style={styles.bubbleStatLabel}>CO₂ Saved</Text>
+              </View>
+              
+              <View style={styles.bubbleStatItem}>
+                <View style={styles.bubbleStatIcon}>
+                  <Ionicons name="people" color="#3B82F6" size={20} />
+                </View>
+                <Text style={styles.bubbleStatNumber}>{bubbleMembers.length}</Text>
+                <Text style={styles.bubbleStatLabel}>Members</Text>
+              </View>
+            </View>
+            
+            {/* Recent Members */}
+            {bubbleMembers.length > 0 && (
+              <View style={styles.membersPreview}>
+                <Text style={styles.membersPreviewTitle}>Recent Members</Text>
+                <View style={styles.membersAvatars}>
+                  {bubbleMembers.slice(0, 4).map((member, index) => (
+                    <View key={member.id} style={[styles.memberAvatar, { marginLeft: index > 0 ? -8 : 0 }]}>
+                      <Text style={styles.memberInitial}>
+                        {member.name.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  ))}
+                  {bubbleMembers.length > 4 && (
+                    <View style={[styles.memberAvatar, styles.moreMembers, { marginLeft: -8 }]}>
+                      <Text style={styles.moreMembersText}>+{bubbleMembers.length - 4}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
             )}
           </View>
-        ) : (
-          <View style={styles.noChallengeCard}>
-            <Ionicons name="trophy" color="#6B7280" size={48} />
-            <Text style={styles.noChallengeTitle}>No Active Challenge</Text>
-            <Text style={styles.noChallengeText}>
-              Check back soon for this week's environmental challenge!
-            </Text>
-          </View>
         )}
 
-        {activeBubble && (
-          <View style={styles.bubbleStatsCard}>
-            <Text style={styles.cardTitle}>{activeBubble.name} Impact</Text>
-            <View style={styles.impactGrid}>
-              <View style={styles.impactItem}>
-                <View style={styles.impactIcon}>
-                  <Ionicons name="leaf" color="#10B981" size={24} />
-                </View>
-                <Text style={styles.impactNumber}>{activeBubble.totalCO2Saved}kg</Text>
-                <Text style={styles.impactLabel}>CO₂ Saved</Text>
-              </View>
-              <View style={styles.impactItem}>
-                <View style={styles.impactIcon}>
-                  <Ionicons name="trophy" color="#F59E0B" size={24} />
-                </View>
-                <Text style={styles.impactNumber}>{activeBubble.totalPoints}</Text>
-                <Text style={styles.impactLabel}>Total Points</Text>
-              </View>
+        {/* All Bubbles Overview */}
+        {userBubbles.length > 1 && (
+          <View style={styles.allBubblesCard}>
+            <View style={styles.cardHeaderWithAction}>
+              <Text style={styles.cardTitle}>Your Bubbles</Text>
+              <Pressable onPress={() => setShowBubbleSelector(true)}>
+                <Text style={styles.viewAllText}>View All</Text>
+              </Pressable>
             </View>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bubblesScroll}>
+              {userBubbles.slice(0, 5).map((userBubble) => (
+                <Pressable
+                  key={userBubble.id}
+                  style={[
+                    styles.bubblePreviewCard,
+                    user?.activeBubbleId === userBubble.bubbleId && styles.activeBubblePreview
+                  ]}
+                  onPress={() => handleSwitchBubble(userBubble.bubbleId)}
+                >
+                  <View style={styles.bubblePreviewIcon}>
+                    <Ionicons name="people" color="#10B981" size={20} />
+                  </View>
+                  <Text style={styles.bubblePreviewName}>
+                    {bubbleNames[userBubble.bubbleId] || 'Loading...'}
+                  </Text>
+                  <Text style={styles.bubblePreviewStats}>
+                    {userBubble.points} pts • {userBubble.co2Saved}kg CO₂
+                  </Text>
+                  {user?.activeBubbleId === userBubble.bubbleId && (
+                    <View style={styles.activeIndicator}>
+                      <Text style={styles.activeIndicatorText}>Active</Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         )}
 
-        {completions.length > 0 && (
-          <View style={styles.recentActivity}>
+        {/* Recent Activity */}
+        {recentActivity.length > 0 && (
+          <View style={styles.recentActivityCard}>
             <Text style={styles.cardTitle}>Recent Activity</Text>
-            {completions.slice(0, 3).map((completion) => (
-              <View key={completion.id} style={styles.activityItem}>
+            {recentActivity.slice(0, 3).map((activity) => (
+              <View key={activity.id} style={styles.activityItem}>
                 <View style={styles.activityIcon}>
-                  <Ionicons name="checkmark-circle" color="#10B981" size={16} />
+                  <Ionicons 
+                    name={getActivityIcon(activity.type)} 
+                    color={getActivityColor(activity.type)} 
+                    size={16} 
+                  />
                 </View>
-                <Text style={styles.activityText}>
-                  Challenge completed
-                </Text>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityText}>
+                    <Text style={styles.activityUserName}>{activity.userName}</Text> {activity.action}
+                  </Text>
+                  {activity.points && (
+                    <Text style={styles.activityPoints}>+{activity.points} points</Text>
+                  )}
+                </View>
                 <Text style={styles.activityTime}>
-                  {completion.completedAt.toLocaleDateString()}
+                  {formatTimeAgo(activity.time)}
                 </Text>
               </View>
             ))}
@@ -700,6 +896,237 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  quickActionsCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  quickActionButton: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  quickActionText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#374151',
+    textAlign: 'center',
+  },
+  activeBubbleCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bubbleCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  bubbleIconLarge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  bubbleHeaderInfo: {
+    flex: 1,
+  },
+  bubbleCardTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  bubbleCardSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  bubbleStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  bubbleStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  bubbleStatIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  bubbleStatNumber: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  bubbleStatLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  membersPreview: {
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingTop: 16,
+  },
+  membersPreviewTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  membersAvatars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  memberAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  memberInitial: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+  },
+  moreMembers: {
+    backgroundColor: '#6B7280',
+  },
+  moreMembersText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+  },
+  allBubblesCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardHeaderWithAction: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
+  },
+  bubblesScroll: {
+    marginHorizontal: -4,
+  },
+  bubblePreviewCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 4,
+    minWidth: 140,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  activeBubblePreview: {
+    backgroundColor: '#D1FAE5',
+    borderColor: '#10B981',
+  },
+  bubblePreviewIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  bubblePreviewName: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  bubblePreviewStats: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  activeIndicator: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  activeIndicatorText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+  },
+  recentActivityCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   challengeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -877,25 +1304,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
+  activityContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
   activityIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   activityText: {
-    flex: 1,
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#111827',
+    marginBottom: 2,
+  },
+  activityUserName: {
+    fontFamily: 'Inter-SemiBold',
+    color: '#10B981',
+  },
+  activityPoints: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#F59E0B',
   },
   activityTime: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
+    marginLeft: 8,
   },
   emptyGradient: {
     flex: 1,
