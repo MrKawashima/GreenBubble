@@ -6,31 +6,41 @@ export const SupabaseService = {
   // Auth operations
   async signUp(email: string, password: string, name: string) {
     try {
+      console.log('Starting signup process...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) throw error;
-
-      if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            name,
-            email,
-            points: 0,
-            level: 1,
-            badges: [],
-          });
-
-        if (profileError) throw profileError;
+      
+      if (!data.user) {
+        throw new Error('No user data returned from signup');
       }
+
+      console.log('User created, creating profile...');
+      // Create user profile with error handling
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          name,
+          email,
+          points: 0,
+          level: 1,
+          badges: [],
+        });
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw profileError;
+      }
+      
+      console.log('Signup completed successfully');
 
       return data;
     } catch (error) {
+      console.error('SignUp service error:', error);
       throw error;
     }
   },
@@ -83,6 +93,7 @@ export const SupabaseService = {
   // User operations
   async getUser(userId: string): Promise<User | null> {
     try {
+      console.log('Getting user:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -90,12 +101,17 @@ export const SupabaseService = {
         .maybeSingle();
 
       if (error) {
-        console.error('GetUserBubbles database error:', error);
         console.error('GetUser database error:', error);
+        // Don't throw on user not found errors
+        if (error.code === 'PGRST116') {
+          return null;
+        }
         throw error;
       }
 
       if (!data) return null; // No user found
+      
+      console.log('User data loaded successfully');
 
       return {
         ...data,

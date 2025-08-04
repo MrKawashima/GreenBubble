@@ -37,17 +37,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     mounted.current = true;
     
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted.current) {
-        setSession(session);
-        if (session?.user) {
-          loadUserData(session.user.id);
-        } else {
+    // Get initial session with error handling
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting initial session:', error);
+          setAuthLoading(false);
+          return;
+        }
+        
+        if (mounted.current) {
+          setSession(session);
+          if (session?.user) {
+            await loadUserData(session.user.id);
+          } else {
+            setAuthLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted.current) {
           setAuthLoading(false);
         }
       }
-    });
+    };
+    
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -86,14 +103,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string) => {
     try {
-      // Add a small delay on iOS to prevent race conditions
-      if (Platform.OS === 'ios' || Platform.OS === 'android') {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout loading user data')), 15000);
+      });
       
-      // Load user data first, then bubbles to avoid race conditions
-      const userData = await SupabaseService.getUser(userId);
-      const bubbles = await SupabaseService.getUserBubbles(userId);
+      const loadPromise = async () => {
+        // Add a small delay on iOS to prevent race conditions
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        // Load user data first, then bubbles to avoid race conditions
+        const userData = await SupabaseService.getUser(userId);
+        const bubbles = await SupabaseService.getUserBubbles(userId);
+        
+        return { userData, bubbles };
+      };
+      
+      const { userData, bubbles } = await Promise.race([
+        loadPromise(),
+        timeoutPromise
+      ]) as { userData: any, bubbles: any[] };
       
       if (mounted.current) {
         setUser(userData);
@@ -101,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error loading user data:', error);
-      // Don't crash the app on auth errors
+      // Don't crash the app on auth errors - set safe defaults
       if (mounted.current) {
         setUser(null);
         setUserBubbles([]);
@@ -139,8 +170,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await SupabaseService.signIn(email, password);
+      const result = await SupabaseService.signIn(email, password);
+      if (!result) {
+        throw new Error('Sign in failed');
+      }
     } catch (error) {
+      console.error('SignIn error in context:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -150,8 +185,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, name: string) => {
     setLoading(true);
     try {
-      await SupabaseService.signUp(email, password, name);
+      const result = await SupabaseService.signUp(email, password, name);
+      if (!result) {
+        throw new Error('Sign up failed');
+      }
     } catch (error) {
+      console.error('SignUp error in context:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -162,7 +201,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await SupabaseService.signOut();
+      // Clear state immediately
+      setSession(null);
+      setUser(null);
+      setUserBubbles([]);
     } catch (error) {
+      console.error('Logout error in context:', error);
       throw error;
     } finally {
       setLoading(false);

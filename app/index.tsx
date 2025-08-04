@@ -9,16 +9,22 @@ export default function IndexScreen() {
   const { session, authLoading } = useAuth();
 
   useEffect(() => {
-    // Add a small delay to prevent race conditions
+    // Add error handling and longer timeout for iOS
     const timer = setTimeout(() => {
-      if (!authLoading) {
-        if (session) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/(auth)/welcome');
+      try {
+        if (!authLoading) {
+          if (session) {
+            router.replace('/(tabs)');
+          } else {
+            router.replace('/(auth)/welcome');
+          }
         }
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback navigation
+        router.replace('/(auth)/welcome');
       }
-    }, 5000); // Slightly longer delay to show splash screen
+    }, 3000); // Reduced from 5 seconds
 
     return () => clearTimeout(timer);
   }, [session, authLoading]);

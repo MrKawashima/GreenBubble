@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
@@ -19,8 +19,28 @@ function RootLayoutContent() {
   
   // Keep splash screen visible while auth is loading
   useEffect(() => {
-    if (!authLoading) {
-      SplashScreen.hideAsync();
+    const hideSplash = async () => {
+      try {
+        if (!authLoading) {
+          await SplashScreen.hideAsync();
+        }
+      } catch (error) {
+        console.error('Error hiding splash screen:', error);
+      }
+    };
+    
+    hideSplash();
+  }, [authLoading]);
+
+  // Add error boundary for auth loading
+  useEffect(() => {
+    if (authLoading) {
+      const timeout = setTimeout(() => {
+        console.warn('Auth loading taking too long, continuing anyway');
+        SplashScreen.hideAsync().catch(console.error);
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
     }
   }, [authLoading]);
 
@@ -70,7 +90,16 @@ export default function RootLayout() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
-  // Don't render anything until fonts are loaded
+  // Handle font loading with error recovery
+  useEffect(() => {
+    if (fontError) {
+      console.error('Font loading error:', fontError);
+      // Continue anyway to prevent app from being stuck
+      SplashScreen.hideAsync().catch(console.error);
+    }
+  }, [fontError]);
+
+  // Don't render anything until fonts are loaded or we have an error
   if (!fontsLoaded && !fontError) {
     return null;
   }
